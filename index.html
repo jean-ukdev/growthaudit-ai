@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GrowthAudit AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://js.stripe.com/v3/"></script>
+<link rel="alternate" hreflang="en" href="https://growthauditai.netlify.app/">
+<link rel="alternate" hreflang="pt" href="https://growthauditai.netlify.app/?lang=pt">
+<style>
+:root{--ink:#0d0d0d;--paper:#f5f0e8;--cream:#ede7d7;--gold:#c9a84c;--gold2:#e8c96b;--rust:#c45c2e;--sage:#3d5a4c;--muted:#6b6457;--white:#ffffff}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);overflow-x:hidden}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1.1rem 5%;background:rgba(245,240,232,.94);backdrop-filter:blur(14px);border-bottom:1px solid rgba(201,168,76,.18)}
+.logo{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--ink);text-decoration:none}
+.logo span{color:var(--gold)}
+.nav-links{list-style:none;display:flex;gap:2rem;align-items:center}
+.nav-links a{text-decoration:none;color:var(--muted);font-size:.82rem;font-weight:500;letter-spacing:.04em;text-transform:uppercase;transition:color .2s}
+.nav-links a:hover{color:var(--ink)}
+.nav-cta{background:var(--ink)!important;color:var(--paper)!important;padding:.5rem 1.3rem;border-radius:2px}
+.nav-cta:hover{background:var(--gold)!important;color:var(--ink)!important}
+.nav-mob{display:none;background:none;border:none;cursor:pointer;font-size:1.5rem;color:var(--ink)}
+/* ── LANGUAGE SWITCHER ── */
+.lang-switcher{display:flex;align-items:center;gap:0;border:1px solid rgba(13,13,13,.18);border-radius:2px;overflow:hidden;margin-left:.5rem}
+.lang-btn{background:none;border:none;padding:.3rem .6rem;font-family:'DM Sans',sans-serif;font-size:.72rem;font-weight:600;letter-spacing:.06em;cursor:pointer;color:var(--muted);transition:all .2s;text-transform:uppercase}
+.lang-btn.active{background:var(--ink);color:var(--paper)}
+.lang-btn:not(.active):hover{background:var(--cream)}
+.lang-divider{width:1px;background:rgba(13,13,13,.18);height:1.4rem}
+#mob-menu{display:none;position:fixed;top:61px;left:0;right:0;z-index:99;background:var(--paper);border-bottom:1px solid rgba(201,168,76,.18);padding:1rem 5%}
+#mob-menu.open{display:block}
+#mob-menu a{display:block;padding:.65rem 0;color:var(--muted);text-decoration:none;font-size:.9rem;border-bottom:1px solid rgba(13,13,13,.06)}
+#mob-menu .mob-cta{width:100%;margin-top:.9rem;background:var(--ink);color:var(--paper);border:none;padding:.85rem;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:600;cursor:pointer}
+.mob-lang{display:flex;gap:.5rem;margin-top:.9rem;padding-top:.9rem;border-top:1px solid rgba(13,13,13,.06)}
+.mob-lang-btn{flex:1;padding:.6rem;border:1px solid rgba(13,13,13,.15);border-radius:2px;background:none;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;color:var(--muted);text-transform:uppercase}
+.mob-lang-btn.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+#hero{min-height:100vh;display:grid;place-items:center;padding:8rem 5% 5rem;position:relative;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 75% 50%,rgba(201,168,76,.11) 0%,transparent 70%),radial-gradient(ellipse 40% 60% at 10% 80%,rgba(196,92,46,.07) 0%,transparent 70%)}
+.hero-lines{position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 79px,rgba(201,168,76,.07) 79px,rgba(201,168,76,.07) 80px)}
+.hero-inner{position:relative;z-index:1;max-width:860px;text-align:center}
+.eyebrow{display:inline-flex;align-items:center;gap:.6rem;font-size:.74rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:1.5rem;opacity:0;animation:fadeUp .7s .2s forwards}
+.eyebrow::before,.eyebrow::after{content:'';display:block;width:2rem;height:1px;background:var(--gold)}
+h1{font-family:'Playfair Display',serif;font-size:clamp(2.5rem,6.5vw,5rem);font-weight:900;line-height:1.06;letter-spacing:-.03em;margin-bottom:1.3rem;opacity:0;animation:fadeUp .7s .35s forwards}
+h1 em{font-style:italic;color:var(--rust)}
+.hero-sub{font-size:clamp(.92rem,1.8vw,1.12rem);color:var(--muted);line-height:1.72;max-width:550px;margin:0 auto 2.6rem;font-weight:300;opacity:0;animation:fadeUp .7s .5s forwards}
+.hero-btns{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;opacity:0;animation:fadeUp .7s .65s forwards}
+.btn-primary{background:var(--ink);color:var(--paper);padding:.92rem 2rem;border-radius:2px;font-size:.9rem;font-weight:500;letter-spacing:.02em;text-decoration:none;border:2px solid var(--ink);transition:all .25s}
+.btn-primary:hover{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+.btn-secondary{background:transparent;color:var(--ink);padding:.92rem 2rem;border-radius:2px;font-size:.9rem;font-weight:500;text-decoration:none;border:2px solid rgba(13,13,13,.22);transition:all .25s}
+.btn-secondary:hover{border-color:var(--ink)}
+.hero-trust{margin-top:2.6rem;display:flex;justify-content:center;gap:1.8rem;flex-wrap:wrap;opacity:0;animation:fadeUp .7s .8s forwards}
+.trust-item{display:flex;align-items:center;gap:.4rem;font-size:.78rem;color:var(--muted)}
+.trust-dot{width:5px;height:5px;border-radius:50%;background:var(--gold)}
+section{padding:6rem 5%}
+.s-label{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:.8rem;display:block}
+.s-title{font-family:'Playfair Display',serif;font-size:clamp(1.8rem,3.8vw,3rem);font-weight:700;line-height:1.15;letter-spacing:-.02em;margin-bottom:1rem}
+.s-sub{font-size:.98rem;color:var(--muted);line-height:1.72;max-width:530px;font-weight:300}
+#problems{background:var(--ink);color:var(--paper)}
+#problems .s-label{color:var(--gold)}
+#problems .s-title{color:var(--paper)}
+#problems .s-sub{color:rgba(245,240,232,.55)}
+.prob-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1px;margin-top:3rem;border:1px solid rgba(255,255,255,.05)}
+.prob-card{padding:2.1rem;border:1px solid rgba(255,255,255,.05);transition:background .25s}
+.prob-card:hover{background:rgba(201,168,76,.05)}
+.prob-num{font-family:'Playfair Display',serif;font-size:2.5rem;font-weight:900;color:rgba(201,168,76,.18);line-height:1;margin-bottom:.9rem}
+.prob-card h3{font-size:1rem;font-weight:500;margin-bottom:.5rem;color:var(--paper)}
+.prob-card p{font-size:.86rem;color:rgba(245,240,232,.44);line-height:1.7;font-weight:300}
+#how{background:var(--cream)}
+.how-grid{display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:center;margin-top:3rem}
+.steps{display:flex;flex-direction:column;gap:1.7rem}
+.step{display:flex;gap:1.3rem;padding-bottom:1.7rem;border-bottom:1px solid rgba(13,13,13,.08)}
+.step:last-child{border-bottom:none;padding-bottom:0}
+.step-n{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:900;color:var(--gold);min-width:2rem;line-height:1}
+.step h3{font-size:1rem;font-weight:500;margin-bottom:.3rem}
+.step p{font-size:.86rem;color:var(--muted);line-height:1.65;font-weight:300}
+.mock-box{background:var(--ink);border-radius:4px;padding:2.3rem;position:relative;overflow:hidden}
+.mock-glow{position:absolute;top:-3rem;right:-3rem;width:13rem;height:13rem;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.22),transparent 70%)}
+.mock-inner{position:relative;z-index:1}
+.mock-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;padding-bottom:.9rem;border-bottom:1px solid rgba(255,255,255,.07)}
+.mock-logo{font-family:'Playfair Display',serif;color:var(--gold);font-size:.92rem;font-weight:700}
+.mock-tag{font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.22)}
+.mock-sec{margin-bottom:1.1rem}
+.mock-sec-t{font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:.55rem;font-weight:600}
+.mock-score{display:flex;align-items:flex-end;gap:.3rem}
+.score-big{font-family:'Playfair Display',serif;font-size:2.5rem;font-weight:900;color:var(--gold);line-height:1}
+.score-den{font-size:.83rem;color:rgba(255,255,255,.28);margin-bottom:.25rem}
+.bar-row{display:flex;align-items:center;gap:.65rem;margin-bottom:.4rem}
+.bar-lbl{font-size:.66rem;color:rgba(255,255,255,.42);min-width:72px}
+.bar-track{flex:1;height:4px;background:rgba(255,255,255,.06);border-radius:99px;overflow:hidden}
+.bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--gold),var(--gold2))}
+.mock-list{list-style:none}
+.mock-list li{font-size:.72rem;color:rgba(255,255,255,.52);padding:.35rem 0;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:.5rem;font-weight:300}
+.mock-list li::before{content:'→';color:var(--gold);font-size:.64rem;flex-shrink:0}
+.rep-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(275px,1fr));gap:1.3rem;margin-top:3rem}
+.rep-card{padding:1.9rem;border:1px solid rgba(13,13,13,.09);border-radius:2px;background:var(--white);position:relative;overflow:hidden;transition:transform .25s,box-shadow .25s}
+.rep-card:hover{transform:translateY(-3px);box-shadow:0 12px 36px rgba(13,13,13,.08)}
+.rep-icon{font-size:1.3rem;margin-bottom:.9rem;width:2.6rem;height:2.6rem;background:rgba(201,168,76,.09);border-radius:2px;display:grid;place-items:center}
+.rep-card h3{font-size:.98rem;font-weight:500;margin-bottom:.45rem}
+.rep-card p{font-size:.84rem;color:var(--muted);line-height:1.65;font-weight:300}
+.rep-accent{position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gold),transparent);transform:scaleX(0);transform-origin:left;transition:transform .35s}
+.rep-card:hover .rep-accent{transform:scaleX(1)}
+#pricing{background:var(--ink)}
+#pricing .s-label{color:var(--gold)}
+#pricing .s-title{color:var(--paper)}
+#pricing .s-sub{color:rgba(245,240,232,.5)}
+.price-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(275px,1fr));gap:1.3rem;margin-top:3rem;max-width:840px}
+.price-card{border:1px solid rgba(255,255,255,.07);border-radius:2px;padding:2.6rem 2.1rem;position:relative;transition:border-color .3s}
+.price-card:hover{border-color:rgba(201,168,76,.35)}
+.price-card.feat{border-color:var(--gold);background:rgba(201,168,76,.04)}
+.feat-tag{position:absolute;top:-1px;left:2.1rem;background:var(--gold);color:var(--ink);font-size:.64rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.28rem .82rem}
+.price-card h3{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--paper);margin-bottom:.38rem}
+.price-desc{font-size:.8rem;color:rgba(255,255,255,.33);margin-bottom:1.7rem;font-weight:300}
+.price-amt{font-family:'Playfair Display',serif;font-size:3.1rem;font-weight:900;color:var(--paper);line-height:1;margin-bottom:.22rem}
+.price-amt sup{font-size:1.3rem;vertical-align:super}
+.price-note{font-size:.73rem;color:rgba(255,255,255,.26);margin-bottom:2rem}
+.price-feats{list-style:none;margin-bottom:2rem}
+.price-feats li{font-size:.83rem;color:rgba(255,255,255,.58);padding:.52rem 0;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:.6rem;font-weight:300}
+.price-feats .ck{color:var(--gold);font-size:.76rem}
+.btn-gold{display:block;width:100%;text-align:center;background:var(--gold);color:var(--ink);padding:.92rem;border-radius:2px;font-size:.87rem;font-weight:700;transition:opacity .2s;cursor:pointer;border:none;font-family:'DM Sans',sans-serif}
+.btn-gold:hover{opacity:.85}
+.btn-out-l{display:block;width:100%;text-align:center;background:transparent;color:var(--paper);padding:.92rem;border-radius:2px;border:1px solid rgba(255,255,255,.17);font-size:.87rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:border-color .2s}
+.btn-out-l:hover{border-color:rgba(255,255,255,.55)}
+#faq{background:var(--cream)}
+.faq-list{max-width:660px;margin-top:2.8rem}
+.faq-item{border-bottom:1px solid rgba(13,13,13,.09)}
+.faq-q{width:100%;background:none;border:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:1.3rem 0;font-family:'DM Sans',sans-serif;font-size:.95rem;font-weight:500;color:var(--ink);text-align:left;gap:1rem}
+.faq-ic{font-size:1.2rem;color:var(--gold);transition:transform .3s;flex-shrink:0}
+.faq-item.open .faq-ic{transform:rotate(45deg)}
+.faq-a{font-size:.87rem;color:var(--muted);line-height:1.75;max-height:0;overflow:hidden;transition:max-height .4s ease,padding .3s;font-weight:300}
+.faq-item.open .faq-a{max-height:260px;padding-bottom:1.3rem}
+#cta{background:var(--sage);color:var(--paper);text-align:center;padding:7rem 5%;position:relative;overflow:hidden}
+#cta::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 39px,rgba(255,255,255,.02) 39px,rgba(255,255,255,.02) 40px)}
+.cta-title{font-family:'Playfair Display',serif;font-size:clamp(1.9rem,4.5vw,3.5rem);font-weight:900;line-height:1.1;margin-bottom:1rem;position:relative}
+.cta-sub{font-size:.98rem;color:rgba(255,255,255,.58);max-width:460px;margin:0 auto 2.6rem;line-height:1.72;font-weight:300;position:relative}
+.cta-btns{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;position:relative}
+.btn-cta1{background:var(--gold);color:var(--ink);padding:1rem 2.2rem;border-radius:2px;font-size:.95rem;font-weight:700;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:opacity .2s}
+.btn-cta1:hover{opacity:.88}
+.btn-cta2{background:transparent;color:var(--paper);padding:1rem 2.2rem;border-radius:2px;border:1px solid rgba(255,255,255,.27);font-size:.95rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:border-color .2s}
+.btn-cta2:hover{border-color:rgba(255,255,255,.7)}
+footer{background:#060606;color:rgba(255,255,255,.27);padding:2.3rem 5%;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;font-size:.78rem}
+.foot-logo{font-family:'Playfair Display',serif;color:rgba(255,255,255,.52);font-size:1.02rem;font-weight:700}
+.foot-logo span{color:var(--gold)}
+.foot-links{display:flex;gap:1.6rem}
+footer a{color:rgba(255,255,255,.28);text-decoration:none}
+footer a:hover{color:var(--gold)}
+.overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(8,8,8,.88);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:1rem}
+.overlay.open{display:flex}
+.modal{background:var(--paper);max-width:570px;width:100%;max-height:92vh;overflow-y:auto;border-radius:4px;padding:2.3rem;position:relative;box-shadow:0 40px 80px rgba(0,0,0,.45);animation:fadeUp .3s ease}
+.modal-x{position:absolute;top:.85rem;right:1rem;background:none;border:none;cursor:pointer;font-size:1.5rem;color:var(--muted);line-height:1}
+.prog-track{height:3px;background:rgba(13,13,13,.08);border-radius:99px;margin-bottom:1.2rem;overflow:hidden}
+.prog-fill{height:100%;background:var(--gold);border-radius:99px;transition:width .4s ease}
+.s-lbl{font-size:.66rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.18rem}
+.s-ttl{font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:700;margin-bottom:1.1rem;color:var(--ink)}
+.fr{margin-bottom:.88rem}
+.fr label{display:block;font-size:.66rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.28rem}
+.fr input,.fr select,.fr textarea{width:100%;padding:.68rem .9rem;border:1px solid rgba(13,13,13,.13);border-radius:2px;background:var(--white);font-family:'DM Sans',sans-serif;font-size:.88rem;color:var(--ink);outline:none;transition:border-color .2s}
+.fr input:focus,.fr select:focus,.fr textarea:focus{border-color:var(--gold)}
+.fr textarea{resize:vertical;min-height:75px}
+.fr select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%236b6457' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .88rem center}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:.85rem}
+.form-nav{display:flex;justify-content:space-between;align-items:center;margin-top:1.2rem}
+.btn-nx{background:var(--ink);color:var(--paper);border:none;padding:.74rem 1.5rem;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:.86rem;font-weight:600;cursor:pointer;transition:background .2s}
+.btn-nx:hover{background:var(--gold);color:var(--ink)}
+.btn-nx.gold{background:var(--gold);color:var(--ink)}
+.btn-nx.gold:hover{opacity:.88}
+.btn-bk{background:transparent;color:var(--muted);border:1px solid rgba(13,13,13,.12);padding:.74rem 1.1rem;border-radius:2px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.86rem}
+.btn-bk:hover{border-color:var(--ink);color:var(--ink)}
+.fstep{display:none}
+.fstep.active{display:block}
+.form-note{font-size:.68rem;color:var(--muted);text-align:center;margin-top:.85rem}
+.loading-wrap{text-align:center;padding:2.2rem 0}
+.spinner{width:48px;height:48px;border:3px solid rgba(201,168,76,.18);border-top:3px solid var(--gold);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 1.3rem}
+.loading-wrap h3{font-family:'Playfair Display',serif;font-size:1.25rem;margin-bottom:.45rem}
+.loading-wrap p{color:var(--muted);font-size:.86rem;line-height:1.65}
+.l-steps{margin-top:1.4rem;display:flex;flex-direction:column;gap:.45rem}
+.l-step{display:flex;align-items:center;gap:.65rem;background:rgba(13,13,13,.04);border-radius:2px;padding:.5rem .85rem;font-size:.78rem;color:var(--muted)}
+.l-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);flex-shrink:0}
+.success-wrap{text-align:center;padding:1.2rem 0}
+.suc-icon{width:62px;height:62px;border-radius:50%;background:rgba(61,90,76,.1);border:1px solid rgba(61,90,76,.24);display:flex;align-items:center;justify-content:center;margin:0 auto 1.1rem;font-size:1.7rem}
+.success-wrap h3{font-family:'Playfair Display',serif;font-size:1.45rem;margin-bottom:.45rem}
+.success-wrap p{color:var(--muted);font-size:.86rem;line-height:1.65;margin-bottom:1.2rem}
+.score-box{background:var(--cream);border:1px solid rgba(201,168,76,.24);border-radius:2px;padding:1.1rem 1.3rem;text-align:left;margin-bottom:1.2rem}
+.score-lbl{font-size:.63rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:.3rem}
+.score-num{font-family:'Playfair Display',serif;font-size:2.6rem;font-weight:900;color:var(--ink);line-height:1}
+.met-row{display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem}
+.met-lbl{font-size:.71rem;color:var(--muted);min-width:125px}
+.met-track{flex:1;height:4px;background:rgba(13,13,13,.08);border-radius:99px;overflow:hidden}
+.met-fill{height:100%;background:var(--gold);border-radius:99px}
+.met-val{font-size:.71rem;color:var(--gold);font-weight:600;min-width:28px;text-align:right}
+.suc-btns{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap}
+.btn-dl{background:var(--gold);color:var(--ink);border:none;padding:.8rem 1.5rem;border-radius:2px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:700}
+.btn-new{background:transparent;border:1px solid rgba(13,13,13,.16);color:var(--muted);padding:.8rem 1.2rem;border-radius:2px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.88rem}
+.err-box{background:rgba(196,92,46,.07);border:1px solid rgba(196,92,46,.28);border-radius:2px;padding:.85rem 1rem;color:var(--rust);font-size:.84rem;line-height:1.6;margin-bottom:.9rem}
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease}
+.reveal.visible{opacity:1;transform:none}
+.d1{transition-delay:.1s}.d2{transition-delay:.2s}.d3{transition-delay:.3s}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:860px){.nav-links{display:none}.nav-mob{display:block}.how-grid{grid-template-columns:1fr;gap:2.5rem}.mock-box{display:none}.g2{grid-template-columns:1fr}.price-grid{grid-template-columns:1fr}footer{flex-direction:column;text-align:center}.foot-links{justify-content:center}}
+@media(max-width:480px){.hero-btns,.cta-btns{flex-direction:column;align-items:center}.modal{padding:1.5rem}}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#" class="logo">Growth<span>Audit</span> AI</a>
+  <ul class="nav-links">
+    <li><a href="#how" data-i18n="nav_how">How it works</a></li>
+    <li><a href="#report" data-i18n="nav_report">The Report</a></li>
+    <li><a href="#pricing" data-i18n="nav_pricing">Pricing</a></li>
+    <li><a href="#faq" data-i18n="nav_faq">FAQ</a></li>
+    <li><a href="#" class="nav-cta" onclick="goToStripe();return false" data-i18n="nav_cta">Get Audit — R$49,90</a></li>
+    <li>
+      <div class="lang-switcher" role="group" aria-label="Language selector">
+        <button class="lang-btn active" id="btn-en" onclick="setLang('en')" aria-label="Switch to English">EN</button>
+        <div class="lang-divider"></div>
+        <button class="lang-btn" id="btn-pt" onclick="setLang('pt')" aria-label="Mudar para Português">PT</button>
+      </div>
+    </li>
+  </ul>
+  <button class="nav-mob" onclick="document.getElementById('mob-menu').classList.toggle('open')" aria-label="Menu">☰</button>
+</nav>
+
+<div id="mob-menu">
+  <a href="#how" data-i18n="nav_how" onclick="document.getElementById('mob-menu').classList.remove('open')">How it works</a>
+  <a href="#report" data-i18n="nav_report" onclick="document.getElementById('mob-menu').classList.remove('open')">The Report</a>
+  <a href="#pricing" data-i18n="nav_pricing" onclick="document.getElementById('mob-menu').classList.remove('open')">Pricing</a>
+  <a href="#faq" data-i18n="nav_faq" onclick="document.getElementById('mob-menu').classList.remove('open')">FAQ</a>
+  <button class="mob-cta" data-i18n="mob_cta" onclick="goToStripe();document.getElementById('mob-menu').classList.remove('open')">Get Full Audit — R$49,90</button>
+  <div class="mob-lang">
+    <button class="mob-lang-btn active" id="mob-btn-en" onclick="setLang('en')" aria-label="Switch to English">🇬🇧 EN</button>
+    <button class="mob-lang-btn" id="mob-btn-pt" onclick="setLang('pt')" aria-label="Mudar para Português">🇧🇷 PT</button>
+  </div>
+</div>
+
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-lines"></div>
+  <div class="hero-inner">
+    <div class="eyebrow" data-i18n="hero_eyebrow">AI-Powered Business Intelligence</div>
+    <h1 data-i18n-html="hero_title">Find out what's <em>really</em><br>limiting your growth</h1>
+    <p class="hero-sub" data-i18n="hero_sub">GrowthAudit AI analyses your business in minutes and generates a personalised, professional PDF audit report — downloaded instantly to your device.</p>
+    <div class="hero-btns">
+      <a href="#" class="btn-primary" onclick="goToStripe();return false" data-i18n="hero_btn_primary">Get Your Full Audit — R$49,90 →</a>
+      <a href="#" class="btn-secondary" onclick="openM('free');return false" data-i18n="hero_btn_secondary">Try Free Mini Audit</a>
+    </div>
+    <div class="hero-trust">
+      <span class="trust-item"><span class="trust-dot"></span><span data-i18n="trust_1">AI-generated in ~60 seconds</span></span>
+      <span class="trust-item"><span class="trust-dot"></span><span data-i18n="trust_2">Professional PDF download</span></span>
+      <span class="trust-item"><span class="trust-dot"></span><span data-i18n="trust_3">No account needed</span></span>
+      <span class="trust-item"><span class="trust-dot"></span><span data-i18n="trust_4">Stripe secure checkout</span></span>
+    </div>
+  </div>
+</section>
+
+<section id="problems">
+  <div class="reveal">
+    <span class="s-label" data-i18n="prob_label">The Problem</span>
+    <h2 class="s-title" data-i18n-html="prob_title">Most businesses are bleeding revenue<br>without knowing it</h2>
+    <p class="s-sub" data-i18n="prob_sub">You're working hard — but something isn't clicking. These are the silent killers we diagnose.</p>
+  </div>
+  <div class="prob-grid">
+    <div class="prob-card reveal d1"><div class="prob-num">01</div><h3 data-i18n="prob1_title">Unclear acquisition strategy</h3><p data-i18n="prob1_desc">Spending on channels that don't convert, or relying on word-of-mouth with no system behind it.</p></div>
+    <div class="prob-card reveal d2"><div class="prob-num">02</div><h3 data-i18n="prob2_title">Broken sales process</h3><p data-i18n="prob2_desc">Leads are falling through the cracks. No follow-up, no nurture sequence, no urgency.</p></div>
+    <div class="prob-card reveal d3"><div class="prob-num">03</div><h3 data-i18n="prob3_title">Missed conversion opportunities</h3><p data-i18n="prob3_desc">Your offer is good but how it's presented, priced, or positioned is costing you sales.</p></div>
+    <div class="prob-card reveal d1"><div class="prob-num">04</div><h3 data-i18n="prob4_title">No strategic roadmap</h3><p data-i18n="prob4_desc">You're reacting instead of executing. Without a clear plan, growth is accidental at best.</p></div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="how-grid">
+    <div>
+      <span class="s-label reveal" data-i18n="how_label">The Process</span>
+      <h2 class="s-title reveal" data-i18n="how_title">From payment to PDF in minutes</h2>
+      <div class="steps">
+        <div class="step reveal"><div class="step-n">1</div><div><h3 data-i18n="how_step1_title">Purchase your audit</h3><p data-i18n="how_step1_desc">Secure payment via Stripe. You're redirected straight to your personalised questionnaire.</p></div></div>
+        <div class="step reveal"><div class="step-n">2</div><div><h3 data-i18n="how_step2_title">Complete 12 questions</h3><p data-i18n="how_step2_desc">Targeted questions about your business — takes less than 8 minutes.</p></div></div>
+        <div class="step reveal"><div class="step-n">3</div><div><h3 data-i18n="how_step3_title">AI analyses your data</h3><p data-i18n="how_step3_desc">Our AI reads your answers and generates a bespoke audit specific to your situation.</p></div></div>
+        <div class="step reveal"><div class="step-n">4</div><div><h3 data-i18n="how_step4_title">Download your PDF instantly</h3><p data-i18n="how_step4_desc">A professional 8-page branded PDF downloads automatically — no email, no waiting.</p></div></div>
+      </div>
+    </div>
+    <div class="mock-box">
+      <div class="mock-glow"></div>
+      <div class="mock-inner">
+        <div class="mock-hdr"><span class="mock-logo">GrowthAudit AI</span><span class="mock-tag">Confidential</span></div>
+        <div class="mock-sec"><div class="mock-sec-t">Growth Score</div><div class="mock-score"><span class="score-big">64</span><span class="score-den">/100</span></div></div>
+        <div class="mock-sec">
+          <div class="mock-sec-t">Key Metrics</div>
+          <div class="bar-row"><span class="bar-lbl">Acquisition</span><div class="bar-track"><div class="bar-fill" style="width:45%"></div></div></div>
+          <div class="bar-row"><span class="bar-lbl">Conversion</span><div class="bar-track"><div class="bar-fill" style="width:68%"></div></div></div>
+          <div class="bar-row"><span class="bar-lbl">Retention</span><div class="bar-track"><div class="bar-fill" style="width:31%"></div></div></div>
+          <div class="bar-row"><span class="bar-lbl">Marketing</span><div class="bar-track"><div class="bar-fill" style="width:55%"></div></div></div>
+        </div>
+        <div class="mock-sec"><div class="mock-sec-t">7-Day Quick Wins</div><ul class="mock-list"><li>Set up automated follow-up</li><li>Add social proof to sales page</li><li>Test a new acquisition channel</li></ul></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="report">
+  <div style="max-width:640px">
+    <span class="s-label reveal" data-i18n="rep_label">The Deliverable</span>
+    <h2 class="s-title reveal" data-i18n="rep_title">An 8-page report that tells you exactly what to do next</h2>
+    <p class="s-sub reveal" data-i18n="rep_sub">No vague advice. No generic templates. Built entirely from your answers.</p>
+  </div>
+  <div class="rep-grid">
+    <div class="rep-card reveal d1"><div class="rep-icon">🔍</div><h3 data-i18n="rep1_title">Business Diagnosis</h3><p data-i18n="rep1_desc">A frank assessment of your growth stage, operations, and where the real bottlenecks are hiding.</p><div class="rep-accent"></div></div>
+    <div class="rep-card reveal d2"><div class="rep-icon">⚡</div><h3 data-i18n="rep2_title">Quick Wins</h3><p data-i18n="rep2_desc">Immediate, low-cost improvements you can implement this week for measurable results fast.</p><div class="rep-accent"></div></div>
+    <div class="rep-card reveal d3"><div class="rep-icon">🗓</div><h3 data-i18n="rep3_title">7-Day Action Plan</h3><p data-i18n="rep3_desc">Step-by-step daily strategy to build momentum immediately after reading your report.</p><div class="rep-accent"></div></div>
+    <div class="rep-card reveal d1"><div class="rep-icon">🎯</div><h3 data-i18n="rep4_title">Key Problems Identified</h3><p data-i18n="rep4_desc">Pinpointed bottlenecks, missed opportunities, and conversion issues specific to your business.</p><div class="rep-accent"></div></div>
+    <div class="rep-card reveal d2"><div class="rep-icon">📊</div><h3 data-i18n="rep5_title">Tailored Recommendations</h3><p data-i18n="rep5_desc">Industry-specific suggestions calibrated to your channels, process, and growth objectives.</p><div class="rep-accent"></div></div>
+    <div class="rep-card reveal d3"><div class="rep-icon">📄</div><h3 data-i18n="rep6_title">Professional PDF</h3><p data-i18n="rep6_desc">A beautifully formatted, branded 8-page report. Download, keep, and act on it.</p><div class="rep-accent"></div></div>
+  </div>
+</section>
+
+<section id="pricing">
+  <span class="s-label reveal" data-i18n="price_label">Investment</span>
+  <h2 class="s-title reveal" style="color:var(--paper)" data-i18n="price_title">One report. Real clarity.</h2>
+  <p class="s-sub reveal" data-i18n="price_sub">No subscriptions. No upsells. Just a clear picture of your business and what to do next.</p>
+  <div class="price-grid">
+    <div class="price-card reveal">
+      <h3 data-i18n="price_free_title">Free Mini Audit</h3>
+      <p class="price-desc" data-i18n="price_free_desc">A snapshot of your top growth blockers.</p>
+      <div class="price-amt"><sup>R$</sup>0</div>
+      <p class="price-note" data-i18n="price_free_note">No card required</p>
+      <ul class="price-feats">
+        <li><span class="ck">✓</span><span data-i18n="price_free_f1">5-question snapshot</span></li>
+        <li><span class="ck">✓</span><span data-i18n="price_free_f2">Top 3 growth blockers</span></li>
+        <li><span class="ck">✓</span><span data-i18n="price_free_f3">Instant AI analysis</span></li>
+        <li><span class="ck">✓</span><span data-i18n="price_free_f4">PDF downloads instantly</span></li>
+      </ul>
+      <button class="btn-out-l" data-i18n="price_free_btn" onclick="openM('free')">Start Free Audit</button>
+    </div>
+    <div class="price-card feat reveal d1">
+      <div class="feat-tag" data-i18n="price_feat_tag">Most Popular</div>
+      <h3 data-i18n="price_full_title">Full Growth Audit</h3>
+      <p class="price-desc" data-i18n="price_full_desc">The complete picture — diagnosis, plan, and recommendations.</p>
+      <div class="price-amt"><sup>R$</sup>49,90</div>
+      <p class="price-note" data-i18n="price_full_note">One-time · PDF downloads instantly</p>
+      <ul class="price-feats">
+        <li><span class="ck">✓</span><span data-i18n="price_full_f1">Full business diagnosis</span></li>
+        <li><span class="ck">✓</span><span data-i18n="price_full_f2">Key problems identified</span></li>
+        <li><span class="ck">✓</span><span data-i18n="price_full_f3">Quick win strategies</span></li>
+        <li><span class="ck">✓</span><span data-i18n="price_full_f4">7-day action plan</span></li>
+        <li><span class="ck">✓</span><span data-i18n="price_full_f5">Tailored recommendations</span></li>
+        <li><span class="ck">✓</span><span data-i18n="price_full_f6">Branded 8-page PDF</span></li>
+        <li><span class="ck">✓</span><span data-i18n="price_full_f7">Downloads instantly</span></li>
+      </ul>
+      <button class="btn-gold" data-i18n="price_full_btn" onclick="goToStripe()">Get Your Full Audit</button>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <span class="s-label reveal" data-i18n="faq_label">Questions</span>
+  <h2 class="s-title reveal" data-i18n="faq_title">Frequently asked</h2>
+  <div class="faq-list">
+    <div class="faq-item reveal"><button class="faq-q" onclick="toggleFaq(this)"><span data-i18n="faq1_q">How long does the whole process take?</span><span class="faq-ic">+</span></button><div class="faq-a" data-i18n="faq1_a">The questionnaire takes about 8 minutes. Once you click generate, the AI writes your report and the PDF downloads automatically in roughly 60 seconds.</div></div>
+    <div class="faq-item reveal"><button class="faq-q" onclick="toggleFaq(this)"><span data-i18n="faq2_q">Is the report actually personalised to my business?</span><span class="faq-ic">+</span></button><div class="faq-a" data-i18n="faq2_a">Yes. The AI analyses your specific answers — business type, acquisition channels, sales process, and challenges — to write a report that applies directly to your situation. It is not a template.</div></div>
+    <div class="faq-item reveal"><button class="faq-q" onclick="toggleFaq(this)"><span data-i18n="faq3_q">Do I need to create an account or give my email?</span><span class="faq-ic">+</span></button><div class="faq-a" data-i18n="faq3_a">No account needed. You fill in the questionnaire, pay via Stripe for the full audit, and the PDF downloads straight to your device. No login required.</div></div>
+    <div class="faq-item reveal"><button class="faq-q" onclick="toggleFaq(this)"><span data-i18n="faq4_q">What payment methods do you accept?</span><span class="faq-ic">+</span></button><div class="faq-a" data-i18n="faq4_a">All major credit and debit cards via Stripe. Payments are processed in GBP on a fully PCI-compliant, SSL-secured checkout.</div></div>
+    <div class="faq-item reveal"><button class="faq-q" onclick="toggleFaq(this)"><span data-i18n="faq5_q">What if the PDF doesn't download?</span><span class="faq-ic">+</span></button><div class="faq-a" data-i18n="faq5_a">Click the Download Again button which appears after generation. If the issue persists, contact us with your payment confirmation and we will resolve it manually.</div></div>
+    <div class="faq-item reveal"><button class="faq-q" onclick="toggleFaq(this)"><span data-i18n="faq6_q">Is my business data kept confidential?</span><span class="faq-ic">+</span></button><div class="faq-a" data-i18n="faq6_a">Absolutely. Your answers are used solely to generate your report and are not stored or shared with any third parties. All data is transmitted over HTTPS.</div></div>
+  </div>
+</section>
+
+<section id="cta">
+  <span class="s-label" data-i18n="cta_label">Get Started Today</span>
+  <h2 class="cta-title" data-i18n-html="cta_title">Stop guessing.<br>Start growing.</h2>
+  <p class="cta-sub" data-i18n="cta_sub">Your audit is ready in 60 seconds. The insights could be worth thousands.</p>
+  <div class="cta-btns">
+    <button class="btn-cta1" data-i18n="cta_btn1" onclick="goToStripe()">Get Your Full Audit — R$49,90</button>
+    <button class="btn-cta2" data-i18n="cta_btn2" onclick="openM('free')">Try Free Mini Audit</button>
+  </div>
+</section>
+
+<footer>
+  <span class="foot-logo">Growth<span>Audit</span> AI</span>
+  <div class="foot-links">
+    <a href="#" data-i18n="footer_privacy">Privacy Policy</a>
+    <a href="#" data-i18n="footer_terms">Terms</a>
+    <a href="#" data-i18n="footer_contact">Contact</a>
+  </div>
+  <span data-i18n="footer_rights">© 2026 GrowthAudit AI. All rights reserved.</span>
+</footer>
+
+<!-- MODAL FREE -->
+<div class="overlay" id="modal-free">
+  <div class="modal">
+    <button class="modal-x" onclick="closeM('free')">×</button>
+    <div id="fw">
+      <div class="prog-track"><div class="prog-fill" id="fp" style="width:20%"></div></div>
+      <p class="s-lbl" id="fl">Step 1 of 5</p>
+      <p class="s-ttl" data-i18n="form_free_title">Free Mini Audit</p>
+      <div class="fstep active" data-step="1">
+        <div class="g2">
+          <div class="fr"><label data-i18n="form_name">Your name</label><input type="text" id="fn" placeholder="Jane Smith"></div>
+          <div class="fr"><label data-i18n="form_email">Email address</label><input type="email" id="fe" placeholder="jane@example.com"></div>
+        </div>
+        <div class="form-nav"><span></span><button class="btn-nx" onclick="fNx(1)" data-i18n="form_next">Next →</button></div>
+      </div>
+      <div class="fstep" data-step="2">
+        <div class="fr"><label data-i18n="form_biztype">Business type</label>
+          <select id="ft">
+            <option value="" data-i18n="select_placeholder">Select…</option>
+            <option data-i18n="biztype_1">E-commerce</option>
+            <option data-i18n="biztype_2">Service-based</option>
+            <option data-i18n="biztype_3">SaaS / Software</option>
+            <option data-i18n="biztype_4">Consulting / Coaching</option>
+            <option data-i18n="biztype_5">Retail / Physical store</option>
+            <option data-i18n="biztype_6">Other</option>
+          </select>
+        </div>
+        <div class="form-nav"><button class="btn-bk" onclick="fBk(2)" data-i18n="form_back">← Back</button><button class="btn-nx" onclick="fNx(2)" data-i18n="form_next">Next →</button></div>
+      </div>
+      <div class="fstep" data-step="3">
+        <div class="fr"><label data-i18n="form_channel">Main acquisition channel</label>
+          <select id="fch">
+            <option value="" data-i18n="select_placeholder">Select…</option>
+            <option data-i18n="channel_1">Organic social media</option>
+            <option data-i18n="channel_2">Paid ads (Meta / Google)</option>
+            <option data-i18n="channel_3">Word of mouth / referrals</option>
+            <option data-i18n="channel_4">SEO / Content marketing</option>
+            <option data-i18n="channel_5">Email marketing</option>
+            <option data-i18n="channel_6">Other</option>
+          </select>
+        </div>
+        <div class="form-nav"><button class="btn-bk" onclick="fBk(3)" data-i18n="form_back">← Back</button><button class="btn-nx" onclick="fNx(3)" data-i18n="form_next">Next →</button></div>
+      </div>
+      <div class="fstep" data-step="4">
+        <div class="fr"><label data-i18n="form_customers">Monthly customers</label>
+          <select id="fcu">
+            <option value="" data-i18n="select_placeholder">Select…</option>
+            <option>0–10</option><option>11–50</option><option>51–200</option><option>200+</option>
+          </select>
+        </div>
+        <div class="form-nav"><button class="btn-bk" onclick="fBk(4)" data-i18n="form_back">← Back</button><button class="btn-nx" onclick="fNx(4)" data-i18n="form_next">Next →</button></div>
+      </div>
+      <div class="fstep" data-step="5">
+        <div class="fr"><label data-i18n="form_challenge">Biggest challenge right now</label><textarea id="fch2" placeholder="e.g. I get traffic but very few people buy…"></textarea></div>
+        <div class="form-nav"><button class="btn-bk" onclick="fBk(5)" data-i18n="form_back">← Back</button><button class="btn-nx gold" onclick="doFree()" data-i18n="form_generate_free">Generate Free Audit →</button></div>
+      </div>
+    </div>
+    <div id="fl2" style="display:none">
+      <div class="loading-wrap">
+        <div class="spinner"></div>
+        <h3 data-i18n="loading_title">Analysing your business…</h3>
+        <p data-i18n="loading_sub">Generating your personalised mini audit. About 30 seconds.</p>
+        <div class="l-steps">
+          <div class="l-step"><div class="l-dot"></div><span data-i18n="loading_step1">Diagnosing growth blockers…</span></div>
+          <div class="l-step"><div class="l-dot"></div><span data-i18n="loading_step2">Identifying quick wins…</span></div>
+          <div class="l-step"><div class="l-dot"></div><span data-i18n="loading_step3">Building your PDF…</span></div>
+        </div>
+      </div>
+    </div>
+    <div id="fs" style="display:none">
+      <div class="success-wrap">
+        <div class="suc-icon">✅</div>
+        <h3 data-i18n="success_free_title">Your mini audit is ready!</h3>
+        <p data-i18n="success_desc">The PDF downloaded automatically. Check your Downloads folder.</p>
+        <div class="score-box"><div class="score-lbl" data-i18n="success_score">Growth Score</div><div class="score-num" id="fsn">—</div><div id="fmet" style="margin-top:.9rem"></div></div>
+        <div class="suc-btns">
+          <button class="btn-dl" id="fdl" data-i18n="success_dl">Download Again</button>
+          <button class="btn-new" onclick="rFree()" data-i18n="success_new">Start Over</button>
+        </div>
+        <p style="margin-top:.9rem;font-size:.78rem;color:var(--muted)"><span data-i18n="success_upsell">Want the full 8-page report?</span> <a href="#" onclick="closeM('free');goToStripe();return false" style="color:var(--gold);text-decoration:none" data-i18n="success_upsell_link">Get Full Audit →</a></p>
+      </div>
+    </div>
+    <div id="fer" style="display:none">
+      <p style="font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;margin-bottom:.6rem" data-i18n="error_title">Something went wrong</p>
+      <div class="err-box" id="ferm"></div>
+      <button class="btn-nx" onclick="rFree()" data-i18n="error_btn">Try Again</button>
+    </div>
+    <p class="form-note" data-i18n="form_note_free">🔒 Your data is used only to generate your report</p>
+  </div>
+</div>
+
+<!-- MODAL PAID -->
+<div class="overlay" id="modal-paid">
+  <div class="modal">
+    <button class="modal-x" onclick="closeM('paid')">×</button>
+    <div id="pw">
+      <div style="background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.24);border-radius:2px;padding:.75rem .95rem;margin-bottom:1.1rem;font-size:.78rem;color:var(--muted);display:flex;gap:.55rem"><span>🔒</span><span data-i18n="form_paid_notice">After Stripe payment you'll return here to complete your questionnaire and download your PDF instantly.</span></div>
+      <div class="prog-track"><div class="prog-fill" id="pp" style="width:0%"></div></div>
+      <p class="s-lbl" id="pl">Step 1 of 4</p>
+      <p class="s-ttl" id="pt" data-i18n="step1_title">About Your Business</p>
+      <div class="fstep active" data-step="1">
+        <div class="g2">
+          <div class="fr"><label data-i18n="form_fullname">Full name</label><input type="text" id="pna" placeholder="Jane Smith"></div>
+          <div class="fr"><label data-i18n="form_email">Email address</label><input type="email" id="pem" placeholder="jane@example.com"></div>
+        </div>
+        <div class="fr"><label data-i18n="form_bizname">Business name</label><input type="text" id="pbn" placeholder="Acme Ltd"></div>
+        <div class="g2">
+          <div class="fr"><label data-i18n="form_biztype">Business type</label>
+            <select id="pbt">
+              <option value="" data-i18n="select_placeholder">Select…</option>
+              <option data-i18n="biztype_1">E-commerce</option>
+              <option data-i18n="biztype_2">Service-based</option>
+              <option data-i18n="biztype_3">SaaS / Software</option>
+              <option data-i18n="biztype_4">Consulting / Coaching</option>
+              <option data-i18n="biztype_5">Retail / Physical store</option>
+              <option data-i18n="biztype_6">Other</option>
+            </select>
+          </div>
+          <div class="fr"><label data-i18n="form_country">Country</label><input type="text" id="pco" placeholder="United Kingdom"></div>
+        </div>
+        <div class="fr"><label data-i18n="form_website">Website or social media</label><input type="text" id="pwe" placeholder="https://example.com or @handle"></div>
+        <div class="form-nav"><span></span><button class="btn-nx" onclick="pNx(1)" data-i18n="form_next">Next →</button></div>
+      </div>
+      <div class="fstep" data-step="2">
+        <div class="g2">
+          <div class="fr"><label data-i18n="form_customers">Monthly customers</label>
+            <select id="pcu"><option value="" data-i18n="select_placeholder">Select…</option><option>0–10</option><option>11–50</option><option>51–200</option><option>200+</option></select>
+          </div>
+          <div class="fr"><label data-i18n="form_channel">Main acquisition channel</label>
+            <select id="pch">
+              <option value="" data-i18n="select_placeholder">Select…</option>
+              <option data-i18n="channel_1">Organic social media</option>
+              <option data-i18n="channel_2">Paid ads (Meta / Google)</option>
+              <option data-i18n="channel_3">Word of mouth / referrals</option>
+              <option data-i18n="channel_4">SEO / Content marketing</option>
+              <option data-i18n="channel_5">Email marketing</option>
+              <option data-i18n="channel_6">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="fr"><label data-i18n="form_sales">Describe your sales process</label><textarea id="psa" placeholder="e.g. DM → call → proposal…"></textarea></div>
+        <div class="form-nav"><button class="btn-bk" onclick="pBk(2)" data-i18n="form_back">← Back</button><button class="btn-nx" onclick="pNx(2)" data-i18n="form_next">Next →</button></div>
+      </div>
+      <div class="fstep" data-step="3">
+        <div class="g2">
+          <div class="fr"><label data-i18n="form_ads">Do you run paid ads?</label>
+            <select id="pad">
+              <option value="" data-i18n="select_placeholder">Select…</option>
+              <option data-i18n="ads_1">Yes, regularly</option>
+              <option data-i18n="ads_2">Yes, occasionally</option>
+              <option data-i18n="ads_3">No</option>
+              <option data-i18n="ads_4">Tried but stopped</option>
+            </select>
+          </div>
+          <div class="fr"><label data-i18n="form_social">Social media presence</label>
+            <select id="pso">
+              <option value="" data-i18n="select_placeholder">Select…</option>
+              <option data-i18n="social_1">Very active (daily)</option>
+              <option data-i18n="social_2">Moderate (few times/week)</option>
+              <option data-i18n="social_3">Minimal</option>
+              <option data-i18n="social_4">None</option>
+            </select>
+          </div>
+        </div>
+        <div class="fr"><label data-i18n="form_followup">Follow-up strategy after first contact</label><textarea id="pfu" placeholder="e.g. I send a quote then wait…"></textarea></div>
+        <div class="form-nav"><button class="btn-bk" onclick="pBk(3)" data-i18n="form_back">← Back</button><button class="btn-nx" onclick="pNx(3)" data-i18n="form_next">Next →</button></div>
+      </div>
+      <div class="fstep" data-step="4">
+        <div class="fr"><label data-i18n="form_challenge">Biggest challenge right now</label><textarea id="pch2" placeholder="e.g. I get enquiries but they don't convert…"></textarea></div>
+        <div class="fr"><label data-i18n="form_objective">Main growth objective</label>
+          <select id="pob">
+            <option value="" data-i18n="select_placeholder">Select…</option>
+            <option data-i18n="objective_1">Increase revenue</option>
+            <option data-i18n="objective_2">Attract more customers</option>
+            <option data-i18n="objective_3">Improve conversion rate</option>
+            <option data-i18n="objective_4">Reduce churn / improve retention</option>
+            <option data-i18n="objective_5">Scale operations</option>
+            <option data-i18n="objective_6">Launch new product / service</option>
+          </select>
+        </div>
+        <div class="form-nav"><button class="btn-bk" onclick="pBk(4)" data-i18n="form_back">← Back</button><button class="btn-nx gold" onclick="doPaid()" data-i18n="form_generate_paid">Generate My Audit PDF →</button></div>
+      </div>
+    </div>
+    <div id="pl2" style="display:none">
+      <div class="loading-wrap">
+        <div class="spinner"></div>
+        <h3 data-i18n="loading_full_title">Building your growth audit…</h3>
+        <p data-i18n="loading_full_sub">The AI is writing your personalised 8-page report. About 60 seconds.</p>
+        <div class="l-steps">
+          <div class="l-step"><div class="l-dot"></div><span data-i18n="loading_step1">Diagnosing growth bottlenecks…</span></div>
+          <div class="l-step"><div class="l-dot"></div><span data-i18n="loading_step2">Identifying quick wins…</span></div>
+          <div class="l-step"><div class="l-dot"></div><span data-i18n="loading_step4">Building 7-day action plan…</span></div>
+          <div class="l-step"><div class="l-dot"></div><span data-i18n="loading_step5">Generating your PDF…</span></div>
+        </div>
+      </div>
+    </div>
+    <div id="ps" style="display:none">
+      <div class="success-wrap">
+        <div class="suc-icon">✅</div>
+        <h3 data-i18n="success_paid_title">Your report is ready!</h3>
+        <p data-i18n="success_desc">The PDF downloaded automatically. Check your Downloads folder.</p>
+        <div class="score-box"><div class="score-lbl" data-i18n="success_score">Overall Growth Score</div><div class="score-num" id="psn">—</div><div id="pmet" style="margin-top:.9rem"></div></div>
+        <div class="suc-btns">
+          <button class="btn-dl" id="pdl" data-i18n="success_dl">Download Again</button>
+          <button class="btn-new" onclick="rPaid()" data-i18n="success_new_paid">New Audit</button>
+        </div>
+      </div>
+    </div>
+    <div id="per" style="display:none">
+      <p style="font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;margin-bottom:.6rem" data-i18n="error_title">Something went wrong</p>
+      <div class="err-box" id="perm"></div>
+      <button class="btn-nx" onclick="rPaid()" data-i18n="error_btn">Try Again</button>
+    </div>
+    <p class="form-note" data-i18n="form_note_paid">🔒 Stripe secure checkout · SSL encrypted · PCI compliant</p>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// i18n SYSTEM
+// ══════════════════════════════════════
+const TRANSLATIONS = {};
+let currentLang = 'en';
+
+async function loadTranslations(lang) {
+  if (TRANSLATIONS[lang]) return TRANSLATIONS[lang];
+  try {
+    const res = await fetch('/locales/' + lang + '/common.json');
+    TRANSLATIONS[lang] = await res.json();
+  } catch(e) {
+    // Fallback: load EN
+    if (lang !== 'en') {
+      if (!TRANSLATIONS['en']) {
+        const res = await fetch('/locales/en/common.json');
+        TRANSLATIONS['en'] = await res.json();
+      }
+      TRANSLATIONS[lang] = TRANSLATIONS['en'];
+    }
+  }
+  return TRANSLATIONS[lang];
+}
+
+function t(key) {
+  const d = TRANSLATIONS[currentLang] || TRANSLATIONS['en'] || {};
+  return d[key] || TRANSLATIONS['en']?.[key] || key;
+}
+
+function applyTranslations() {
+  // text nodes
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const val = t(key);
+    if (val) el.textContent = val;
+  });
+  // html nodes (allow <em>, <br>)
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    const key = el.getAttribute('data-i18n-html');
+    const val = t(key);
+    if (val) el.innerHTML = val;
+  });
+  // placeholders
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    const key = el.getAttribute('data-i18n-ph');
+    const val = t(key);
+    if (val) el.placeholder = val;
+  });
+  // page title & meta
+  document.title = currentLang === 'pt'
+    ? 'GrowthAudit AI — Descubra o que está limitando o seu crescimento'
+    : 'GrowthAudit AI — Discover What\'s Holding Your Business Back';
+  // step labels
+  updateFreeStepLabel();
+  updatePaidStepLabel();
+  // lang buttons
+  ['en','pt'].forEach(l => {
+    const btn = document.getElementById('btn-' + l);
+    const mob = document.getElementById('mob-btn-' + l);
+    if (btn) btn.classList.toggle('active', l === currentLang);
+    if (mob) mob.classList.toggle('active', l === currentLang);
+  });
+  // html lang attr
+  document.documentElement.lang = currentLang === 'pt' ? 'pt-BR' : 'en';
+}
+
+async function setLang(lang) {
+  const allowed = ['en', 'pt'];
+  if (!allowed.includes(lang)) return;
+  currentLang = lang;
+  localStorage.setItem('language', lang);
+  await loadTranslations(lang);
+  applyTranslations();
+}
+
+function detectLang() {
+  const saved = localStorage.getItem('language');
+  if (saved && ['en','pt'].includes(saved)) return saved;
+  const nav = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
+  return nav.startsWith('pt') ? 'pt' : 'en';
+}
+
+// ── Step labels ──
+function updateFreeStepLabel() {
+  const el = document.getElementById('fl');
+  if (el) el.textContent = t('form_step') + ' ' + fStep + ' ' + t('form_of') + ' 5';
+}
+function updatePaidStepLabel() {
+  const el = document.getElementById('pl');
+  if (el) el.textContent = t('form_step') + ' ' + pStep + ' ' + t('form_of') + ' 4';
+  const titles = ['step1_title','step2_title','step3_title','step4_title'];
+  const pt = document.getElementById('pt');
+  if (pt) pt.textContent = t(titles[pStep - 1]);
+}
+
+// ══════════════════════════════════════
+// SCROLL REVEAL
+// ══════════════════════════════════════
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }});
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+// ══════════════════════════════════════
+// FAQ
+// ══════════════════════════════════════
+function toggleFaq(btn) {
+  const item = btn.parentElement, open = item.classList.contains('open');
+  document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+  if (!open) item.classList.add('open');
+}
+
+// ══════════════════════════════════════
+// MODALS
+// ══════════════════════════════════════
+function openM(t_) { document.getElementById('modal-'+t_).classList.add('open'); document.body.style.overflow='hidden'; }
+function closeM(t_) { document.getElementById('modal-'+t_).classList.remove('open'); document.body.style.overflow=''; }
+document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) { o.classList.remove('open'); document.body.style.overflow=''; }}));
+
+// ══════════════════════════════════════
+// VALIDATION
+// ══════════════════════════════════════
+function val(ids) {
+  for (const id of ids) {
+    const el = document.getElementById(id);
+    if (!el || !el.value.trim()) { if(el){el.style.borderColor='var(--rust)';setTimeout(()=>el.style.borderColor='',2000);el.focus();} return false; }
+  }
+  const em = ids.find(id => { const el=document.getElementById(id); return el&&el.type==='email'; });
+  if (em) { const el=document.getElementById(em); if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(el.value)){el.style.borderColor='var(--rust)';alert('Please enter a valid email.');return false;} }
+  return true;
+}
+
+// ══════════════════════════════════════
+// FREE FORM
+// ══════════════════════════════════════
+let fStep = 1;
+function fNx(s) {
+  const map={1:['fn','fe'],2:['ft'],3:['fch'],4:['fcu']};
+  if (!val(map[s]||[])) return;
+  document.querySelector('#modal-free .fstep[data-step="'+s+'"]').classList.remove('active');
+  fStep = s + 1;
+  document.querySelector('#modal-free .fstep[data-step="'+fStep+'"]').classList.add('active');
+  document.getElementById('fp').style.width = (fStep/5*100)+'%';
+  updateFreeStepLabel();
+}
+function fBk(s) {
+  document.querySelector('#modal-free .fstep[data-step="'+s+'"]').classList.remove('active');
+  fStep = s - 1;
+  document.querySelector('#modal-free .fstep[data-step="'+fStep+'"]').classList.add('active');
+  document.getElementById('fp').style.width = (fStep/5*100)+'%';
+  updateFreeStepLabel();
+}
+function rFree() {
+  fStep=1; updateFreeStepLabel();
+  document.querySelectorAll('#modal-free .fstep').forEach(s=>s.classList.remove('active'));
+  document.querySelector('#modal-free .fstep[data-step="1"]').classList.add('active');
+  document.getElementById('fp').style.width='20%';
+  document.getElementById('fw').style.display='';
+  ['fl2','fs','fer'].forEach(id=>document.getElementById(id).style.display='none');
+}
+
+// ══════════════════════════════════════
+// PAID FORM
+// ══════════════════════════════════════
+let pStep = 1;
+function pNx(s) {
+  const map={1:['pna','pem','pbn','pbt','pco','pwe'],2:['pcu','pch','psa'],3:['pad','pso','pfu']};
+  if (!val(map[s]||[])) return;
+  document.querySelector('#modal-paid .fstep[data-step="'+s+'"]').classList.remove('active');
+  pStep = s + 1;
+  document.querySelector('#modal-paid .fstep[data-step="'+pStep+'"]').classList.add('active');
+  document.getElementById('pp').style.width = (pStep/4*100)+'%';
+  updatePaidStepLabel();
+}
+function pBk(s) {
+  document.querySelector('#modal-paid .fstep[data-step="'+s+'"]').classList.remove('active');
+  pStep = s - 1;
+  document.querySelector('#modal-paid .fstep[data-step="'+pStep+'"]').classList.add('active');
+  document.getElementById('pp').style.width = (pStep/4*100)+'%';
+  updatePaidStepLabel();
+}
+function rPaid() {
+  pStep=1; updatePaidStepLabel();
+  document.querySelectorAll('#modal-paid .fstep').forEach(s=>s.classList.remove('active'));
+  document.querySelector('#modal-paid .fstep[data-step="1"]').classList.add('active');
+  document.getElementById('pp').style.width='0%';
+  document.getElementById('pw').style.display='';
+  ['pl2','ps','per'].forEach(id=>document.getElementById(id).style.display='none');
+}
+
+// ══════════════════════════════════════
+// METRICS
+// ══════════════════════════════════════
+function renderMet(cid, mets) {
+  if (!mets) return;
+  document.getElementById(cid).innerHTML = mets.map(m =>
+    `<div class="met-row"><span class="met-lbl">${m.label}</span><div class="met-track"><div class="met-fill" style="width:${m.value}%"></div></div><span class="met-val">${m.value}%</span></div>`
+  ).join('');
+}
+
+// ══════════════════════════════════════
+// CLAUDE API
+// ══════════════════════════════════════
+async function callClaude(d, mini) {
+  const isPt = currentLang === 'pt';
+  const langInstruction = isPt
+    ? 'Responda SEMPRE em português do Brasil. Todo o conteúdo deve estar em português.'
+    : 'Respond ALWAYS in English. All content must be in English.';
+
+  const prompt = mini
+    ? `${langInstruction}
+Business growth audit. Return ONLY valid JSON, no markdown, no backticks.
+Data: type=${d.bizType}, channel=${d.channel}, customers=${d.customers}/mo, challenge=${d.challenge}
+JSON: {"score":<0-100>,"summary":"<3 sentences>","metrics":[{"label":"${isPt?'Aquisição de Clientes':'Customer Acquisition'}","value":<0-100>},{"label":"${isPt?'Conversão de Vendas':'Sales Conversion'}","value":<0-100>},{"label":"${isPt?'Retenção de Clientes':'Customer Retention'}","value":<0-100>},{"label":"${isPt?'Presença de Marketing':'Marketing Presence'}","value":<0-100>},{"label":"${isPt?'Clareza Operacional':'Operational Clarity'}","value":<0-100>}],"diagnosis":{"overall":"<2 sentences>","stage":"<${isPt?'Fase Inicial|Crescimento|Escalonamento|Estabelecido':'Early Stage|Growth Stage|Scaling|Established'}>","operational":"<2 sentences>"},"problems":[{"title":"<5 words>","description":"<1 sentence>"},{"title":"<5 words>","description":"<1 sentence>"},{"title":"<5 words>","description":"<1 sentence>"}],"quickWins":[{"title":"<5 words>","description":"<1 sentence>"},{"title":"<5 words>","description":"<1 sentence>"},{"title":"<5 words>","description":"<1 sentence>"}],"actionPlan":[{"day":1,"theme":"${isPt?'Diagnóstico':'Audit'}","action":"<1 sentence>"},{"day":2,"theme":"${isPt?'Correção':'Fix'}","action":"<1 sentence>"},{"day":3,"theme":"${isPt?'Criação':'Create'}","action":"<1 sentence>"},{"day":4,"theme":"${isPt?'Lançamento':'Launch'}","action":"<1 sentence>"},{"day":5,"theme":"${isPt?'Promoção':'Promote'}","action":"<1 sentence>"},{"day":6,"theme":"${isPt?'Follow-up':'Follow-up'}","action":"<1 sentence>"},{"day":7,"theme":"${isPt?'Revisão':'Review'}","action":"<1 sentence>"}],"recommendations":[{"title":"<5 words>","priority":"${isPt?'Alta':'High'}","effort":"${isPt?'Baixo':'Low'}","description":"<1 sentence>"},{"title":"<5 words>","priority":"${isPt?'Alta':'High'}","effort":"${isPt?'Médio':'Medium'}","description":"<1 sentence>"},{"title":"<5 words>","priority":"${isPt?'Média':'Medium'}","effort":"${isPt?'Baixo':'Low'}","description":"<1 sentence>"}],"conclusion":"<2 sentences>"}`
+    : `${langInstruction}
+Business growth audit. Return ONLY valid JSON, no markdown, no backticks.
+Data: name=${d.bizName||d.name}, type=${d.bizType}, country=${d.country}, customers=${d.customers}/mo, channel=${d.channel}, ads=${d.ads}, social=${d.social}, challenge=${d.challenge}, objective=${d.objective}
+JSON: {"score":<0-100>,"summary":"<3 sentences>","metrics":[{"label":"${isPt?'Aquisição de Clientes':'Customer Acquisition'}","value":<0-100>},{"label":"${isPt?'Conversão de Vendas':'Sales Conversion'}","value":<0-100>},{"label":"${isPt?'Retenção de Clientes':'Customer Retention'}","value":<0-100>},{"label":"${isPt?'Presença de Marketing':'Marketing Presence'}","value":<0-100>},{"label":"${isPt?'Clareza Operacional':'Operational Clarity'}","value":<0-100>}],"diagnosis":{"overall":"<2 sentences>","stage":"<${isPt?'Pré-Receita|Fase Inicial|Crescimento|Escalonamento|Estabelecido':'Pre-Revenue|Early Stage|Growth Stage|Scaling|Established'}>","operational":"<2 sentences>"},"problems":[{"title":"<5 words>","description":"<1 sentence>"},{"title":"<5 words>","description":"<1 sentence>"},{"title":"<5 words>","description":"<1 sentence>"}],"quickWins":[{"title":"<5 words>","description":"<1 sentence>"},{"title":"<5 words>","description":"<1 sentence>"},{"title":"<5 words>","description":"<1 sentence>"},{"title":"<5 words>","description":"<1 sentence>"}],"actionPlan":[{"day":1,"theme":"${isPt?'Diagnóstico':'Audit'}","action":"<1 sentence>"},{"day":2,"theme":"${isPt?'Correção':'Fix'}","action":"<1 sentence>"},{"day":3,"theme":"${isPt?'Criação':'Create'}","action":"<1 sentence>"},{"day":4,"theme":"${isPt?'Lançamento':'Launch'}","action":"<1 sentence>"},{"day":5,"theme":"${isPt?'Promoção':'Promote'}","action":"<1 sentence>"},{"day":6,"theme":"${isPt?'Follow-up':'Follow-up'}","action":"<1 sentence>"},{"day":7,"theme":"${isPt?'Revisão':'Review'}","action":"<1 sentence>"}],"recommendations":[{"title":"<5 words>","priority":"${isPt?'Alta':'High'}","effort":"${isPt?'Baixo':'Low'}","description":"<1 sentence>"},{"title":"<5 words>","priority":"${isPt?'Alta':'High'}","effort":"${isPt?'Médio':'Medium'}","description":"<1 sentence>"},{"title":"<5 words>","priority":"${isPt?'Média':'Medium'}","effort":"${isPt?'Baixo':'Low'}","description":"<1 sentence>"},{"title":"<5 words>","priority":"${isPt?'Média':'Medium'}","effort":"${isPt?'Alto':'High'}","description":"<1 sentence>"}],"conclusion":"<2 sentences>"}`;
+
+  const res = await fetch('/api/claude', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ max_tokens: mini ? 1500 : 2000, messages: [{ role: 'user', content: prompt }] })
+  });
+  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error('Error ' + res.status + (e.error?.message ? ': ' + e.error.message : '')); }
+  const rd = await res.json();
+  const raw = rd.content.map(b => b.text||'').join('');
+  return JSON.parse(raw.replace(/```json|```/g,'').trim());
+}
+
+// ══════════════════════════════════════
+// PDF BUILDER
+// ══════════════════════════════════════
+async function buildPDF(d, a, mini) {
+  if (!window.jspdf) throw new Error('PDF library not ready.');
+  const {jsPDF} = window.jspdf;
+  const doc = new jsPDF({unit:'mm',format:'a4'});
+  const W=210,H=297,mg=18,cW=174;
+  const gold=[201,168,76],ink=[13,13,13],muted=[107,100,87],white=[255,255,255],sage=[61,90,76],rust=[196,92,46],cream=[237,231,215];
+  const fill=(x,y,w,h,c)=>{doc.setFillColor(...c);doc.rect(x,y,w,h,'F');};
+  const ln=(x1,y1,x2,y2,c,lw=.4)=>{doc.setDrawColor(...(c||gold));doc.setLineWidth(lw);doc.line(x1,y1,x2,y2);};
+  const sf=(style,size,color)=>{doc.setFont('helvetica',style||'normal');doc.setFontSize(size||10);doc.setTextColor(...(color||ink));};
+  const wrap=(tx,x,y,mw,lh)=>{if(!tx)return y;const lines=doc.splitTextToSize(String(tx),mw||cW);doc.text(lines,x,y);return y+lines.length*(lh||5.5);};
+  const isPt = currentLang === 'pt';
+  const pdfL = {
+    reportType: isPt ? (mini?'MINI AUDITORIA GRATUITA':'RELATORIO CONFIDENCIAL COMPLETO') : (mini?'FREE MINI BUSINESS AUDIT REPORT':'CONFIDENTIAL FULL BUSINESS AUDIT REPORT'),
+    preparedFor: isPt ? 'PREPARADO PARA' : 'PREPARED FOR',
+    reportDate: isPt ? 'Data do Relatorio: ' : 'Report Date: ',
+    growthScore: isPt ? 'PONTUACAO DE CRESCIMENTO' : 'GROWTH SCORE',
+    confidential: isPt ? 'GrowthAudit AI - Confidencial - Apenas para o destinatario' : 'GrowthAudit AI - Confidential - For recipient use only',
+    execSummary: isPt ? 'GROWTHAUDIT AI - RESUMO EXECUTIVO' : 'GROWTHAUDIT AI - EXECUTIVE SUMMARY',
+    execSummaryTitle: isPt ? 'Resumo Executivo' : 'Executive Summary',
+    snapshot: isPt ? 'RESUMO DO NEGOCIO' : 'BUSINESS SNAPSHOT',
+    metrics: isPt ? 'Metricas de Crescimento' : 'Growth Metrics',
+    diagHeader: isPt ? 'GROWTHAUDIT AI - DIAGNOSTICO DO NEGOCIO' : 'GROWTHAUDIT AI - BUSINESS DIAGNOSIS',
+    diagTitle: isPt ? 'Diagnostico do Negocio' : 'Business Diagnosis',
+    overallAssess: isPt ? 'Avaliacao Geral' : 'Overall Assessment',
+    growthStage: isPt ? 'FASE DE CRESCIMENTO' : 'GROWTH STAGE',
+    opAnalysis: isPt ? 'Analise Operacional' : 'Operational Analysis',
+    probHeader: isPt ? 'GROWTHAUDIT AI - PROBLEMAS IDENTIFICADOS' : 'GROWTHAUDIT AI - KEY PROBLEMS IDENTIFIED',
+    probTitle: isPt ? 'Problemas Principais' : 'Key Problems',
+    winsHeader: isPt ? 'GROWTHAUDIT AI - VITORIAS RAPIDAS' : 'GROWTHAUDIT AI - QUICK WINS',
+    winsTitle: isPt ? 'Vitorias Rapidas' : 'Quick Wins',
+    winsSubtitle: isPt ? 'Melhorias imediatas que pode implementar esta semana.' : 'Immediate improvements you can implement this week.',
+    planHeader: isPt ? 'GROWTHAUDIT AI - PLANO DE ACAO DE 7 DIAS' : 'GROWTHAUDIT AI - 7-DAY ACTION PLAN',
+    planTitle: isPt ? 'Plano de Acao de 7 Dias' : '7-Day Action Plan',
+    recHeader: isPt ? 'GROWTHAUDIT AI - RECOMENDACOES PERSONALIZADAS' : 'GROWTHAUDIT AI - TAILORED RECOMMENDATIONS',
+    recTitle: isPt ? 'Recomendacoes Personalizadas' : 'Tailored Recommendations',
+    priority: isPt ? 'Prioridade' : 'Priority',
+    effort: isPt ? 'Esforco' : 'Effort',
+    yourNext: isPt ? 'Seu Proximo' : 'Your Next',
+    moveStarts: isPt ? 'Passo Comeca' : 'Move Starts',
+    today2: isPt ? 'Hoje.' : 'Today.',
+    reportGenerated: isPt ? 'Relatorio gerado por GrowthAudit AI - ' : 'Report generated by GrowthAudit AI - ',
+    preparedForEnd: isPt ? 'Confidencial - preparado para ' : 'Confidential - prepared for ',
+    snapKeys: isPt ? ['Negocio','Tipo','Pais','Clientes','Canal','Objetivo'] : ['Business','Type','Country','Customers','Channel','Objective'],
+    snapKeysMini: isPt ? ['Tipo de Negocio','Canal','Clientes','Desafio'] : ['Business Type','Channel','Customers','Challenge'],
+  };
+  const today = isPt
+    ? new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})
+    : new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  // COVER
+  fill(0,0,W,H,ink);fill(0,0,6,H,gold);
+  doc.setDrawColor(...gold);doc.setLineWidth(.3);doc.circle(W-25,55,65,'S');doc.circle(W-25,55,45,'S');
+  sf('bold',11,gold);doc.text('GROWTHAUDIT AI',mg+8,28);
+  sf('normal',8,muted);doc.text(pdfL.reportType,mg+8,36);
+  ln(mg+8,39,W-mg,39,gold,.2);
+  sf('bold',30,white);doc.text('Growth',mg+8,78);sf('bold',30,gold);doc.text('Audit',mg+8,90);sf('normal',30,white);doc.text('Report',mg+8,102);
+  ln(mg+8,110,mg+70,110,gold,1);
+  sf('normal',9,muted);doc.text(pdfL.preparedFor,mg+8,121);
+  sf('bold',13,white);doc.text(((d.bizName||d.name||'Your Business')).substring(0,42),mg+8,128);
+  sf('normal',9,muted);const sub2=[d.bizType,d.country].filter(Boolean).join(' - ');if(sub2)doc.text(sub2,mg+8,135);
+  sf('normal',8,muted);doc.text(pdfL.reportDate+today,mg+8,144);
+  const score=a.score||60;
+  fill(W-mg-48,H-58,48,40,[22,22,22]);doc.setDrawColor(...gold);doc.setLineWidth(.3);doc.rect(W-mg-48,H-58,48,40,'S');
+  sf('normal',7,gold);doc.text(pdfL.growthScore,W-mg-24,H-50,{align:'center'});
+  sf('bold',26,white);doc.text(String(score),W-mg-24,H-38,{align:'center'});
+  sf('normal',8,muted);doc.text('/ 100',W-mg-24,H-31,{align:'center'});
+  sf('normal',7,muted);doc.text(pdfL.confidential,mg+8,H-10);
+  // SUMMARY
+  doc.addPage();fill(0,0,W,13,gold);sf('bold',8,ink);doc.text(pdfL.execSummary,mg,9);
+  let y=24;sf('bold',19,ink);doc.text(pdfL.execSummaryTitle,mg,y);y+=7;ln(mg,y,mg+cW,y,gold,.5);y+=7;
+  sf('normal',10,ink);y=wrap(a.summary,mg,y,cW,5.8);y+=6;
+  const snapH=mini?30:36;fill(mg,y,cW,snapH,cream);doc.setDrawColor(...gold);doc.setLineWidth(.3);doc.rect(mg,y,cW,snapH,'S');
+  sf('bold',8,gold);doc.text(pdfL.snapshot,mg+5,y+7);
+  const snapVals=mini?[d.bizType,d.channel,(d.customers||'')+'/mo',(d.challenge||'').substring(0,38)]:[d.bizName||d.name,d.bizType,d.country,(d.customers||'')+'/mo',d.channel,d.objective];
+  const snapKeys=mini?pdfL.snapKeysMini:pdfL.snapKeys;
+  const snap=snapKeys.map((k,i)=>[k,snapVals[i]]);
+  const cols=mini?2:3,colW=cW/cols;
+  snap.forEach(([k,v],i)=>{const cx=mg+5+(i%cols)*colW,cy=y+15+Math.floor(i/cols)*10;sf('bold',7,muted);doc.text(k.toUpperCase(),cx,cy);sf('normal',8,ink);doc.text(String(v||'—').substring(0,26),cx,cy+5);});
+  y+=snapH+6;sf('bold',11,ink);doc.text(pdfL.metrics,mg,y);y+=5;ln(mg,y,mg+80,y,gold,.4);y+=6;
+  (a.metrics||[]).forEach(m=>{sf('normal',8,muted);doc.text(m.label,mg,y);sf('bold',8,ink);doc.text(m.value+'%',mg+cW,y,{align:'right'});y+=4;fill(mg,y,cW,3,[228,222,210]);fill(mg,y,(m.value/100)*cW,3,gold);y+=7;});
+  // DIAGNOSIS
+  doc.addPage();fill(0,0,W,13,ink);sf('bold',8,gold);doc.text(pdfL.diagHeader,mg,9);
+  y=24;sf('bold',19,ink);doc.text(pdfL.diagTitle,mg,y);y+=7;ln(mg,y,mg+cW,y,gold,.5);y+=7;
+  sf('bold',11,sage);doc.text(pdfL.overallAssess,mg,y);y+=5;sf('normal',10,ink);y=wrap(a.diagnosis?.overall,mg,y,cW,5.8);y+=5;
+  if(a.diagnosis?.stage){fill(mg,y,cW,20,cream);doc.setDrawColor(...gold);doc.setLineWidth(.3);doc.rect(mg,y,cW,20,'S');sf('bold',8,gold);doc.text(pdfL.growthStage,mg+5,y+7);sf('bold',11,ink);doc.text(a.diagnosis.stage,mg+5,y+15);y+=26;}
+  if(a.diagnosis?.operational){sf('bold',11,sage);doc.text(pdfL.opAnalysis,mg,y);y+=5;sf('normal',10,ink);y=wrap(a.diagnosis.operational,mg,y,cW,5.8);}
+  // PROBLEMS
+  doc.addPage();fill(0,0,W,13,rust);sf('bold',8,white);doc.text(pdfL.probHeader,mg,9);
+  y=24;sf('bold',19,ink);doc.text(pdfL.probTitle,mg,y);y+=7;ln(mg,y,mg+cW,y,rust,.5);y+=7;
+  (a.problems||[]).forEach((p,i)=>{if(y>H-40){doc.addPage();y=20;}fill(mg,y-4,8,8,rust);sf('bold',8,white);doc.text(String(i+1),mg+4,y+1,{align:'center'});sf('bold',11,ink);doc.text(p.title||'',mg+12,y);y+=5;sf('normal',9,muted);y=wrap(p.description,mg+12,y,cW-12,5.3);y+=5;ln(mg,y,mg+cW,y,[228,222,210],.2);y+=4;});
+  // QUICK WINS
+  doc.addPage();fill(0,0,W,13,sage);sf('bold',8,white);doc.text(pdfL.winsHeader,mg,9);
+  y=24;sf('bold',19,ink);doc.text(pdfL.winsTitle,mg,y);y+=7;ln(mg,y,mg+cW,y,sage,.5);y+=7;
+  sf('normal',10,muted);y=wrap(pdfL.winsSubtitle,mg,y,cW,5.8);y+=5;
+  (a.quickWins||[]).forEach(w=>{if(y>H-40){doc.addPage();y=20;}fill(mg,y-4,cW,22,[244,249,246]);doc.setDrawColor(...sage);doc.setLineWidth(.2);doc.rect(mg,y-4,cW,22,'S');sf('bold',10,gold);doc.text('→',mg+4,y+3);sf('bold',10,ink);doc.text(w.title||'',mg+12,y+1);sf('normal',8.5,muted);y=wrap(w.description,mg+12,y+6,cW-16,5);y+=5;});
+  // ACTION PLAN
+  doc.addPage();fill(0,0,W,13,gold);sf('bold',8,ink);doc.text(pdfL.planHeader,mg,9);
+  y=24;sf('bold',19,ink);doc.text(pdfL.planTitle,mg,y);y+=7;ln(mg,y,mg+cW,y,gold,.5);y+=7;
+  (a.actionPlan||[]).forEach(day=>{if(y>H-46){doc.addPage();y=20;}fill(mg,y-4,cW,10,ink);sf('bold',7,gold);doc.text('DAY '+day.day,mg+4,y+2);sf('bold',7,white);doc.text((day.theme||'').toUpperCase(),mg+22,y+2);y+=11;sf('normal',9,ink);y=wrap(day.action,mg+4,y,cW-8,5.3);y+=6;});
+  // RECOMMENDATIONS
+  doc.addPage();fill(0,0,W,13,ink);sf('bold',8,gold);doc.text(pdfL.recHeader,mg,9);
+  y=24;sf('bold',19,ink);doc.text(pdfL.recTitle,mg,y);y+=7;ln(mg,y,mg+cW,y,gold,.5);y+=7;
+  (a.recommendations||[]).forEach((r,i)=>{if(y>H-46){doc.addPage();y=20;}sf('bold',11,sage);doc.text((i+1)+'.  '+(r.title||''),mg,y);y+=5;sf('normal',9,muted);doc.text(pdfL.priority+': '+(r.priority||'High')+'  ·  '+pdfL.effort+': '+(r.effort||'Medium'),mg,y);y+=5;sf('normal',9.5,ink);y=wrap(r.description,mg,y,cW,5.3);y+=6;ln(mg,y,mg+cW,y,[228,222,210],.2);y+=4;});
+  // CONCLUSION
+  doc.addPage();fill(0,0,W,H,ink);fill(0,0,6,H,gold);
+  doc.setDrawColor(...gold);doc.setLineWidth(.3);doc.circle(W-25,55,65,'S');doc.circle(W-25,55,45,'S');
+  sf('bold',11,gold);doc.text('GROWTHAUDIT AI',mg+8,28);
+  sf('bold',22,white);doc.text(pdfL.yourNext,mg+8,76);sf('bold',22,gold);doc.text(pdfL.moveStarts,mg+8,88);sf('bold',22,white);doc.text(pdfL.today2,mg+8,100);
+  ln(mg+8,108,mg+70,108,gold,1);
+  sf('normal',10,[198,193,183]);wrap(a.conclusion||'You now have a clear picture of where your business stands.',mg+8,118,cW-8,6);
+  sf('normal',7,muted);doc.text(pdfL.reportGenerated+today,mg+8,H-18);
+  doc.text(pdfL.preparedForEnd+(d.bizName||d.name||'you'),mg+8,H-12);
+  return doc;
+}
+
+// ══════════════════════════════════════
+// SUBMIT FREE
+// ══════════════════════════════════════
+async function doFree() {
+  const ch = document.getElementById('fch2');
+  if (!ch.value.trim()) { ch.style.borderColor='var(--rust)'; ch.focus(); return; }
+  const d = { name:document.getElementById('fn').value, email:document.getElementById('fe').value, bizType:document.getElementById('ft').value, channel:document.getElementById('fch').value, customers:document.getElementById('fcu').value, challenge:ch.value };
+  document.getElementById('fw').style.display = 'none';
+  document.getElementById('fl2').style.display = 'block';
+  try {
+    const a = await callClaude(d, true);
+    const pdf = await buildPDF(d, a, true);
+    const fname = 'GrowthAudit_Mini_'+(d.name||'Report').replace(/\s+/g,'_')+'.pdf';
+    pdf.save(fname);
+    document.getElementById('fl2').style.display = 'none';
+    document.getElementById('fs').style.display = 'block';
+    document.getElementById('fsn').textContent = a.score;
+    renderMet('fmet', a.metrics);
+    document.getElementById('fdl').onclick = async () => { const p2=await buildPDF(d,a,true); p2.save(fname); };
+    applyTranslations();
+  } catch(e) {
+    document.getElementById('fl2').style.display = 'none';
+    document.getElementById('fer').style.display = 'block';
+    document.getElementById('ferm').textContent = e.message || 'Unknown error. Please try again.';
+    applyTranslations();
+  }
+}
+
+// ══════════════════════════════════════
+// SUBMIT PAID — collect data then go to Stripe
+// ══════════════════════════════════════
+async function doPaid() {
+  if (!val(['pch2','pob'])) return;
+  const d = {
+    name:     document.getElementById('pna').value,
+    email:    document.getElementById('pem').value,
+    bizName:  document.getElementById('pbn').value,
+    bizType:  document.getElementById('pbt').value,
+    country:  document.getElementById('pco').value,
+    website:  document.getElementById('pwe').value,
+    customers:document.getElementById('pcu').value,
+    channel:  document.getElementById('pch').value,
+    sales:    document.getElementById('psa').value,
+    ads:      document.getElementById('pad').value,
+    social:   document.getElementById('pso').value,
+    followup: document.getElementById('pfu').value,
+    challenge:document.getElementById('pch2').value,
+    objective:document.getElementById('pob').value
+  };
+  await proceedToCheckout(d);
+}
+
+// ── GENERATE PDF AFTER PAYMENT RETURN ──
+async function generatePaidPDF() {
+  const raw = localStorage.getItem('auditFormData');
+  const lang = localStorage.getItem('auditLang') || 'en';
+  if (!raw) return;
+  const d = JSON.parse(raw);
+  currentLang = lang;
+
+  // Show generating state on success page
+  const psb = document.getElementById('psb');
+  if (psb) {
+    psb.textContent = currentLang === 'pt' ? 'Gerando o seu PDF…' : 'Generating your PDF…';
+    psb.disabled = true;
+  }
+
+  try {
+    const a = await callClaude(d, false);
+    const pdf = await buildPDF(d, a, false);
+    const fname = 'GrowthAudit_' + (d.bizName || d.name || 'Report').replace(/\s+/g, '_') + '.pdf';
+    pdf.save(fname);
+    localStorage.removeItem('auditFormData');
+    localStorage.removeItem('auditLang');
+
+    // Update success page with score
+    if (psb) {
+      psb.textContent = currentLang === 'pt' ? '✓ PDF Descarregado!' : '✓ PDF Downloaded!';
+      psb.style.background = 'var(--sage)';
+      psb.style.color = '#fff';
+    }
+    const scoreEl = document.getElementById('pay-score');
+    if (scoreEl && a.score) {
+      scoreEl.style.display = 'block';
+      scoreEl.querySelector('.pay-score-num').textContent = a.score;
+      renderMet('pay-metrics', a.metrics);
+    }
+  } catch(e) {
+    if (psb) {
+      psb.textContent = currentLang === 'pt' ? 'Tentar Novamente' : 'Try Again';
+      psb.disabled = false;
+      psb.onclick = generatePaidPDF;
+    }
+  }
+}
+
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+// ── STRIPE CHECKOUT ──
+const STRIPE_PK = 'pk_live_51TYr693adSeY2mBsyB10UKqq3JOpT7TKKVtFSXDDqC1AIcDdzTr3ZLvN3RN3ghYxysujkuM8W7epXGoWLdsENq8T00W9yUJPA1';
+let stripeInstance = null;
+
+function getStripe() {
+  if (!stripeInstance) stripeInstance = Stripe(STRIPE_PK);
+  return stripeInstance;
+}
+
+// Called from all "Get Full Audit" buttons — opens paid modal first
+function goToStripe() {
+  openM('paid');
+}
+
+// Called from final step of paid form — creates checkout session with form data
+async function proceedToCheckout(formData) {
+  const isPt = currentLang === 'pt';
+
+  // Show redirecting state
+  document.getElementById('pw').style.display = 'none';
+  document.getElementById('pl2').style.display = 'block';
+  const h3 = document.querySelector('#pl2 .loading-wrap h3');
+  const p  = document.querySelector('#pl2 .loading-wrap p');
+  if (h3) h3.textContent = isPt ? 'Redirecionando para o pagamento…' : 'Redirecting to payment…';
+  if (p)  p.textContent  = isPt ? 'A preparar o checkout seguro.' : 'Preparing secure checkout.';
+
+  try {
+    const res = await fetch('/api/create-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lang: currentLang, formData })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    // Save form data to sessionStorage so we have it after redirect
+    localStorage.setItem('auditFormData', JSON.stringify(formData));
+    localStorage.setItem('auditLang', currentLang);
+    // Redirect to Stripe
+    window.location.href = data.url;
+  } catch(e) {
+    document.getElementById('pl2').style.display = 'none';
+    document.getElementById('per').style.display = 'block';
+    document.getElementById('perm').textContent = e.message || 'Could not connect to payment. Please try again.';
+  }
+}
+function showPay(id) {
+  const el = document.getElementById(id);
+  if (el) { el.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+}
+function hidePay() {
+  ['pay-success','pay-cancel'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  document.body.style.overflow = '';
+  window.history.replaceState({}, '', window.location.pathname);
+}
+function startPaidAudit() { hidePay(); openM('paid'); }
+
+function applyPayTranslations() {
+  const p = currentLang === 'pt';
+  const s = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  s('pst', p ? 'Aproveite sua Auditoria Personalizada!' : 'Enjoy your Personalised Audit!');
+  s('pss', p ? 'O seu pagamento foi aprovado. O seu PDF personalizado está a ser gerado e será descarregado automaticamente.' : 'Your payment was approved. Your personalised PDF is being generated and will download automatically.');
+  s('ps1', p ? 'Pagamento aprovado' : 'Payment approved');
+  s('ps2', p ? 'Auditoria desbloqueada' : 'Audit unlocked');
+  s('psb', p ? 'Iniciar Minha Auditoria →' : 'Start My Audit →');
+  s('pct', p ? 'Pagamento cancelado' : 'Payment cancelled');
+  s('pcs', p ? 'Nenhum valor foi cobrado. Pode tentar novamente quando quiser.' : "No charge was made. You can try again whenever you're ready.");
+  s('pcb', p ? 'Tentar Novamente →' : 'Try Again →');
+  s('pcback', p ? '← Voltar ao site' : '← Back to site');
+  s('pay-back-site', p ? '← Voltar ao site' : '← Back to site');
+  s('pay-score-lbl', p ? 'Pontuação de Crescimento' : 'Growth Score');
+  const psb2 = document.getElementById('psb');
+  if (psb2 && psb2.disabled) psb2.textContent = p ? 'Gerando PDF…' : 'Generating PDF…';
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
+  const params = new URLSearchParams(window.location.search);
+  const langParam = params.get('lang');
+  const detectedLang = ['en','pt'].includes(langParam) ? langParam : detectLang();
+  currentLang = detectedLang;
+  await loadTranslations('en');
+  await loadTranslations('pt');
+  applyTranslations();
+  applyPayTranslations();
+
+  if (params.get('paid') === 'true') {
+    window.history.replaceState({}, '', window.location.pathname);
+    showPay('pay-success');
+    applyPayTranslations();
+    // Auto-generate PDF if form data is saved
+    if (localStorage.getItem('auditFormData')) {
+      generatePaidPDF();
+    } else {
+      // No form data — user may have come back via bookmark
+      const psb = document.getElementById('psb');
+      const isPt2 = currentLang === 'pt';
+      if (psb) {
+        psb.textContent = isPt2 ? 'Preencher Questionário →' : 'Fill Questionnaire →';
+        psb.disabled = false;
+        psb.style.cursor = 'pointer';
+        psb.style.opacity = '1';
+        psb.style.background = 'var(--gold)';
+        psb.onclick = () => { hidePay(); openM('paid'); };
+      }
+      const ps3el = document.getElementById('ps3');
+      if (ps3el) ps3el.textContent = isPt2 ? 'Preencha o questionário para gerar o PDF' : 'Fill the questionnaire to generate your PDF';
+      const ps3row = document.getElementById('ps3-row');
+      if (ps3row) {
+        const dot = ps3row.querySelector('div');
+        if (dot) { dot.innerHTML = '3'; dot.style.animation = 'none'; }
+      }
+    }
+  } else if (params.get('cancelled') === 'true') {
+    window.history.replaceState({}, '', window.location.pathname);
+    showPay('pay-cancel');
+    applyPayTranslations();
+  }
+});
+</script>
+
+<!-- ═══ PAYMENT SUCCESS ═══ -->
+<div id="pay-success" style="display:none;position:fixed;inset:0;z-index:300;background:var(--paper);align-items:center;justify-content:center;padding:2rem;flex-direction:column;text-align:center;overflow-y:auto">
+  <div style="max-width:520px;width:100%;padding:1rem 0">
+    <div style="font-size:3rem;margin-bottom:1rem">🎉</div>
+    <h2 id="pst" style="font-family:'Playfair Display',serif;font-size:1.9rem;font-weight:900;margin-bottom:.6rem;color:var(--ink)">Payment confirmed!</h2>
+    <p id="pss" style="color:var(--muted);font-size:.92rem;line-height:1.7;margin-bottom:1.5rem">Your payment was approved. We are now generating your personalised audit report.</p>
+    <div style="background:var(--white);border:1px solid rgba(13,13,13,.1);border-radius:4px;padding:2rem;margin-bottom:1.2rem;text-align:left">
+      <div style="display:flex;flex-direction:column;gap:.8rem;margin-bottom:1.5rem">
+        <div style="display:flex;align-items:center;gap:.8rem;font-size:.88rem;color:var(--muted)">
+          <div style="width:22px;height:22px;border-radius:50%;background:var(--sage);color:#fff;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">✓</div>
+          <span id="ps1">Payment approved</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:.8rem;font-size:.88rem;color:var(--muted)">
+          <div style="width:22px;height:22px;border-radius:50%;background:var(--sage);color:#fff;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">✓</div>
+          <span id="ps2">Audit unlocked</span>
+        </div>
+      </div>
+      <button id="psb" disabled style="width:100%;background:var(--gold);color:var(--ink);border:none;padding:1rem;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:700;cursor:not-allowed;opacity:.7">Generating PDF…</button>
+    </div>
+    <!-- Score box shown after PDF generated -->
+    <div id="pay-score" style="display:none;background:var(--cream);border:1px solid rgba(201,168,76,.24);border-radius:4px;padding:1.2rem 1.5rem;text-align:left;margin-bottom:1rem">
+      <div style="font-size:.62rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:.3rem" id="pay-score-lbl">Growth Score</div>
+      <div class="pay-score-num" style="font-family:'Playfair Display',serif;font-size:2.6rem;font-weight:900;color:var(--ink);line-height:1;margin-bottom:.8rem">—</div>
+      <div id="pay-metrics"></div>
+    </div>
+    <button onclick="hidePay()" style="background:transparent;border:1px solid rgba(13,13,13,.18);color:var(--muted);padding:.7rem 1.5rem;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:.88rem;cursor:pointer" id="pay-back-site">← Back to site</button>
+  </div>
+</div>
+
+<!-- ═══ PAYMENT CANCELLED ═══ -->
+<div id="pay-cancel" style="display:none;position:fixed;inset:0;z-index:300;background:var(--paper);align-items:center;justify-content:center;padding:2rem;flex-direction:column;text-align:center">
+  <div style="max-width:440px;width:100%">
+    <div style="font-size:3rem;margin-bottom:1rem">❌</div>
+    <h2 id="pct" style="font-family:'Playfair Display',serif;font-size:1.9rem;font-weight:900;margin-bottom:.6rem;color:var(--ink)">Payment cancelled</h2>
+    <p id="pcs" style="color:var(--muted);font-size:.95rem;line-height:1.7;margin-bottom:2rem">No charge was made. You can try again whenever you're ready.</p>
+    <button onclick="goToStripe()" id="pcb" style="background:var(--gold);color:var(--ink);border:none;padding:1rem 2.5rem;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;margin-bottom:.7rem;display:block;width:100%">Try Again →</button>
+    <button onclick="hidePay()" id="pcback" style="background:transparent;border:1px solid rgba(13,13,13,.18);color:var(--muted);padding:.8rem 2rem;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:.9rem;cursor:pointer;width:100%">← Back to site</button>
+  </div>
+</div>
+</body>
+</html>
