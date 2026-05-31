@@ -1005,34 +1005,55 @@ async function doPaid() {
 }
 
 // ── GENERATE PDF AFTER PAYMENT RETURN ──
+let _auditData = null;
+let _auditFormData = null;
+let _auditFilename = null;
+
 async function generatePaidPDF() {
   const raw = localStorage.getItem('auditFormData');
   const lang = localStorage.getItem('auditLang') || 'en';
-  if (!raw) return;
-  const d = JSON.parse(raw);
+  const isPt = lang === 'pt';
   currentLang = lang;
 
-  // Show generating state on success page
   const psb = document.getElementById('psb');
-  if (psb) {
-    psb.textContent = currentLang === 'pt' ? 'Gerando o seu PDF…' : 'Generating your PDF…';
-    psb.disabled = true;
+  const psbTxt = document.getElementById('psb-txt');
+
+  if (!raw) {
+    // No form data - show questionnaire button
+    if (psb) psb.style.display = 'none';
+    const psbq = document.getElementById('psbq');
+    const psbqTxt = document.getElementById('psbq-txt');
+    if (psbq) psbq.style.display = 'block';
+    if (psbqTxt) psbqTxt.textContent = isPt ? 'Preencher Questionário →' : 'Fill Questionnaire →';
+    return;
   }
+
+  const d = JSON.parse(raw);
+  _auditFormData = d;
+
+  // Show loading state
+  if (psb) { psb.style.opacity = '0.7'; psb.style.cursor = 'not-allowed'; psb.onclick = null; }
+  if (psbTxt) psbTxt.textContent = isPt ? 'Gerando PDF…' : 'Generating PDF…';
 
   try {
     const a = await callClaude(d, false);
     const pdf = await buildPDF(d, a, false);
     const fname = 'GrowthAudit_' + (d.bizName || d.name || 'Report').replace(/\s+/g, '_') + '.pdf';
+
+    // Store for re-download
+    _auditData = a;
+    _auditFilename = fname;
+
+    // Auto download
     pdf.save(fname);
     localStorage.removeItem('auditFormData');
     localStorage.removeItem('auditLang');
 
-    // Update success page with score
-    if (psb) {
-      psb.textContent = currentLang === 'pt' ? '✓ PDF Descarregado!' : '✓ PDF Downloaded!';
-      psb.style.background = 'var(--sage)';
-      psb.style.color = '#fff';
-    }
+    // Update button
+    if (psb) { psb.style.opacity = '1'; psb.style.cursor = 'pointer'; psb.style.background = 'var(--sage)'; psb.style.color = '#fff'; psb.onclick = downloadPDF; }
+    if (psbTxt) psbTxt.textContent = isPt ? '✓ PDF Descarregado! Clique para baixar novamente' : '✓ PDF Downloaded! Click to download again';
+
+    // Show score
     const scoreEl = document.getElementById('pay-score');
     if (scoreEl && a.score) {
       scoreEl.style.display = 'block';
@@ -1040,11 +1061,22 @@ async function generatePaidPDF() {
       renderMet('pay-metrics', a.metrics);
     }
   } catch(e) {
-    if (psb) {
-      psb.textContent = currentLang === 'pt' ? 'Tentar Novamente' : 'Try Again';
-      psb.disabled = false;
-      psb.onclick = generatePaidPDF;
-    }
+    if (psb) { psb.style.opacity = '1'; psb.style.cursor = 'pointer'; psb.onclick = generatePaidPDF; }
+    if (psbTxt) psbTxt.textContent = isPt ? 'Tentar Novamente' : 'Try Again';
+  }
+}
+
+async function downloadPDF() {
+  const isPt = currentLang === 'pt';
+  if (_auditData && _auditFormData) {
+    const pdf = await buildPDF(_auditFormData, _auditData, false);
+    pdf.save(_auditFilename || 'GrowthAudit.pdf');
+  } else if (localStorage.getItem('auditFormData')) {
+    await generatePaidPDF();
+  } else {
+    // No data at all - open questionnaire
+    hidePay();
+    openM('paid');
   }
 }
 
@@ -1143,28 +1175,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     showPay('pay-success');
     applyPayTranslations();
     // Auto-generate PDF if form data is saved
-    if (localStorage.getItem('auditFormData')) {
-      generatePaidPDF();
-    } else {
-      // No form data — user may have come back via bookmark
-      const psb = document.getElementById('psb');
-      const isPt2 = currentLang === 'pt';
-      if (psb) {
-        psb.textContent = isPt2 ? 'Preencher Questionário →' : 'Fill Questionnaire →';
-        psb.disabled = false;
-        psb.style.cursor = 'pointer';
-        psb.style.opacity = '1';
-        psb.style.background = 'var(--gold)';
-        psb.onclick = () => { hidePay(); openM('paid'); };
-      }
-      const ps3el = document.getElementById('ps3');
-      if (ps3el) ps3el.textContent = isPt2 ? 'Preencha o questionário para gerar o PDF' : 'Fill the questionnaire to generate your PDF';
-      const ps3row = document.getElementById('ps3-row');
-      if (ps3row) {
-        const dot = ps3row.querySelector('div');
-        if (dot) { dot.innerHTML = '3'; dot.style.animation = 'none'; }
-      }
-    }
+    generatePaidPDF();
   } else if (params.get('cancelled') === 'true') {
     window.history.replaceState({}, '', window.location.pathname);
     showPay('pay-cancel');
@@ -1190,7 +1201,14 @@ window.addEventListener('DOMContentLoaded', async () => {
           <span id="ps2">Audit unlocked</span>
         </div>
       </div>
-      <button id="psb" disabled style="width:100%;background:var(--gold);color:var(--ink);border:none;padding:1rem;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:700;cursor:not-allowed;opacity:.7">Generating PDF…</button>
+      <!-- Download PDF button - shown after generation -->
+      <button id="psb" onclick="downloadPDF()" style="width:100%;background:var(--gold);color:var(--ink);border:none;padding:1rem;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem">
+        <span>⬇</span> <span id="psb-txt">Download PDF</span>
+      </button>
+      <!-- Questionnaire button - shown when no form data -->
+      <button id="psbq" onclick="hidePay();openM('paid')" style="width:100%;background:var(--ink);color:var(--paper);border:none;padding:1rem;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;margin-top:.7rem;display:none" id="psbq">
+        <span id="psbq-txt">Fill Questionnaire →</span>
+      </button>
     </div>
     <!-- Score box shown after PDF generated -->
     <div id="pay-score" style="display:none;background:var(--cream);border:1px solid rgba(201,168,76,.24);border-radius:4px;padding:1.2rem 1.5rem;text-align:left;margin-bottom:1rem">
