@@ -213,13 +213,7 @@ footer a:hover{color:var(--gold)}
     <li><a href="#pricing" data-i18n="nav_pricing">Pricing</a></li>
     <li><a href="#faq" data-i18n="nav_faq">FAQ</a></li>
     <li><a href="#" class="nav-cta" onclick="goToStripe();return false" data-i18n="nav_cta">Get Audit — R$49,90</a></li>
-    <li>
-      <div class="lang-switcher" role="group" aria-label="Language selector">
-        <button class="lang-btn active" id="btn-en" onclick="setLang('en')" aria-label="Switch to English">EN</button>
-        <div class="lang-divider"></div>
-        <button class="lang-btn" id="btn-pt" onclick="setLang('pt')" aria-label="Mudar para Português">PT</button>
-      </div>
-    </li>
+
   </ul>
   <button class="nav-mob" onclick="document.getElementById('mob-menu').classList.toggle('open')" aria-label="Menu">☰</button>
 </nav>
@@ -230,10 +224,7 @@ footer a:hover{color:var(--gold)}
   <a href="#pricing" data-i18n="nav_pricing" onclick="document.getElementById('mob-menu').classList.remove('open')">Pricing</a>
   <a href="#faq" data-i18n="nav_faq" onclick="document.getElementById('mob-menu').classList.remove('open')">FAQ</a>
   <button class="mob-cta" data-i18n="mob_cta" onclick="goToStripe();document.getElementById('mob-menu').classList.remove('open')">Get Full Audit — R$49,90</button>
-  <div class="mob-lang">
-    <button class="mob-lang-btn active" id="mob-btn-en" onclick="setLang('en')" aria-label="Switch to English">🇬🇧 EN</button>
-    <button class="mob-lang-btn" id="mob-btn-pt" onclick="setLang('pt')" aria-label="Mudar para Português">🇧🇷 PT</button>
-  </div>
+
 </div>
 
 <section id="hero">
@@ -252,6 +243,14 @@ footer a:hover{color:var(--gold)}
       <span class="trust-item"><span class="trust-dot"></span><span data-i18n="trust_2">Professional PDF download</span></span>
       <span class="trust-item"><span class="trust-dot"></span><span data-i18n="trust_3">No account needed</span></span>
       <span class="trust-item"><span class="trust-dot"></span><span data-i18n="trust_4">Stripe secure checkout</span></span>
+    </div>
+    <!-- Language switcher below hero -->
+    <div style="margin-top:2rem;opacity:0;animation:fadeUp .7s 1s forwards">
+      <div style="display:inline-flex;align-items:center;gap:0;border:1px solid rgba(13,13,13,.2);border-radius:2px;overflow:hidden;background:rgba(255,255,255,.6);backdrop-filter:blur(8px)" role="group" aria-label="Language selector">
+        <button class="lang-btn active" id="btn-en" onclick="setLang('en')" aria-label="Switch to English" style="padding:.45rem 1.1rem;font-size:.78rem">🇬🇧 EN</button>
+        <div class="lang-divider"></div>
+        <button class="lang-btn" id="btn-pt" onclick="setLang('pt')" aria-label="Mudar para Português" style="padding:.45rem 1.1rem;font-size:.78rem">🇧🇷 PT</button>
+      </div>
     </div>
   </div>
 </section>
@@ -1010,8 +1009,18 @@ let _auditFormData = null;
 let _auditFilename = null;
 
 async function generatePaidPDF() {
-  const raw = localStorage.getItem('auditFormData');
-  const lang = localStorage.getItem('auditLang') || 'en';
+  // Try all storage methods - Safari clears some on redirect
+  let raw = null;
+  let lang = 'pt';
+  try { raw = localStorage.getItem('auditFormData'); lang = localStorage.getItem('auditLang') || 'pt'; } catch(e){}
+  if (!raw) { try { raw = sessionStorage.getItem('auditFormData'); lang = sessionStorage.getItem('auditLang') || lang; } catch(e){} }
+  // Try URL param as last resort
+  if (!raw) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlData = urlParams.get('fd');
+    if (urlData) { try { raw = decodeURIComponent(escape(atob(urlData))); } catch(e){} }
+  }
+
   const isPt = lang === 'pt';
   currentLang = lang;
 
@@ -1118,10 +1127,14 @@ async function proceedToCheckout(formData) {
     const data = await res.json();
     if (data.error) throw new Error(data.error);
     // Save form data to sessionStorage so we have it after redirect
-    localStorage.setItem('auditFormData', JSON.stringify(formData));
-    localStorage.setItem('auditLang', currentLang);
-    // Redirect to Stripe
+    // Encode form data in URL so it survives Safari redirect
+    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(formData))));
+    // Also save to localStorage as backup
+    try { localStorage.setItem('auditFormData', JSON.stringify(formData)); localStorage.setItem('auditLang', currentLang); } catch(e){}
+    // Redirect to Stripe - data comes back via session metadata
     window.location.href = data.url;
+    // Store in sessionStorage too
+    try { sessionStorage.setItem('auditFormData', JSON.stringify(formData)); sessionStorage.setItem('auditLang', currentLang); } catch(e){}
   } catch(e) {
     document.getElementById('pl2').style.display = 'none';
     document.getElementById('per').style.display = 'block';
