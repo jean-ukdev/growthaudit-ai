@@ -1184,10 +1184,18 @@ window.addEventListener('DOMContentLoaded', async () => {
   applyPayTranslations();
 
   if (params.get('paid') === 'true') {
+    // CRITICAL: Extract fd param BEFORE replaceState wipes the URL
+    const fdParam = params.get('fd');
+    if (fdParam) {
+      try {
+        const decoded = JSON.parse(decodeURIComponent(escape(atob(fdParam))));
+        localStorage.setItem('auditFormData', JSON.stringify(decoded));
+        localStorage.setItem('auditLang', params.get('lang') || 'pt');
+      } catch(e) { console.error('fd decode error:', e); }
+    }
     window.history.replaceState({}, '', window.location.pathname);
     showPay('pay-success');
     applyPayTranslations();
-    // Auto-generate PDF if form data is saved
     generatePaidPDF();
   } else if (params.get('cancelled') === 'true') {
     window.history.replaceState({}, '', window.location.pathname);
